@@ -23,7 +23,7 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
         gapTime     = 200             % Gap between images in ms
         tailTime    = 250             % Tail time in ms
         imagesPerEpoch = 5            % Number of images per .mat file
-        fileFolder  = 'imageOutput'   % Folder containing the .mat files
+        fileFolder  = 'defocusImages'   % Folder containing the .mat files
         backgroundIntensity = 0.5    % 0 - 1 (corresponds to image intensities in folder)
         randomize = true;             % Whether to randomize the order of images in each .mat file
         onlineAnalysis = 'none'       % Type of online analysis
@@ -65,10 +65,10 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             try
                 obj.image_dir = obj.rig.getDevice('Stage').getConfigurationSetting('local_image_directory');
                 if isempty(obj.image_dir)
-                    obj.image_dir = 'C:\Users\dreze\UW\Defocus-Stim-Generation\src';
+                    obj.image_dir = 'C:\Users\Public\Documents\GitRepos\Symphony2\flashed_images\';
                 end
             catch
-                obj.image_dir = 'C:\Users\dreze\UW\Defocus-Stim-Generation\src';
+                obj.image_dir = 'C:\Users\Public\Documents\GitRepos\Symphony2\flashed_images\';
             end
 
             % Get list of .mat files in the directory
