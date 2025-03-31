@@ -23,7 +23,7 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
         gapTime     = 200             % Gap between images in ms
         tailTime    = 250             % Tail time in ms
         imagesPerEpoch = 5            % Number of images per .mat file
-        fileFolder  = 'defocusImages'   % Folder containing the .mat files
+        fileFolder  = 'DefocusImages'   % Folder containing the .mat files
         backgroundIntensity = 0.5    % 0 - 1 (corresponds to image intensities in folder)
         randomize = true;             % Whether to randomize the order of images in each .mat file
         onlineAnalysis = 'none'       % Type of online analysis
