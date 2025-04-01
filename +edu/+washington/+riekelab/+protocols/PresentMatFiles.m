@@ -19,7 +19,7 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
         tailTime    = 250             % Tail time in ms
         imagesPerEpoch = 5            % Number of images per .mat file
         fileFolder  = 'DefocusImages'   % Folder containing the .mat files
-        backgroundIntensity = 0.5    % 0 - 1 (corresponds to image intensities in folder)
+        backgroundIntensity = 0.45    % 0 - 1 (corresponds to image intensities in folder)
         randomize = true;             % Whether to randomize the order of images in each .mat file
         onlineAnalysis = 'none'       % Type of online analysis
         numberOfAverages = uint16(500)% Number of epochs to queue (one per .mat file)
@@ -35,6 +35,7 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
 
     properties (Hidden)
         ampType
+        frameRate
         onlineAnalysisType = symphonyui.core.PropertyType('char', 'row', {'none', 'extracellular', 'exc', 'inh'}) 
         matFiles
         imageMatrix
@@ -56,6 +57,8 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             if ~obj.isMeaRig
                 obj.showFigure('symphonyui.builtin.figures.ResponseFigure', obj.rig.getDevice(obj.amp));
             end
+
+            obj.frameRate = obj.rig.getDevice('Stage').getMonitorRefreshRate();
 
             try
                 obj.image_dir = obj.rig.getDevice('Stage').getConfigurationSetting('local_image_directory');
@@ -137,6 +140,7 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             end
             
             current_index = obj.numEpochsCompleted+1;
+
             % Load next .mat file
             matFilePath = fullfile(obj.image_dir, obj.fileFolder, obj.matFiles{current_index});
             data = load(matFilePath);
@@ -170,7 +174,7 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
         
             % Log metadata correctly
             epoch.addParameter('matFile', obj.matFiles{current_index});
-            epoch.addParameter('imageOrder', strjoin(arrayfun(@num2str, randomizedOrder, 'UniformOutput', false), ','));
+            epoch.addParameter('imageOrder', randomizedOrder);
         
         end
 
