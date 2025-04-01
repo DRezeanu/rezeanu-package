@@ -42,6 +42,7 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
         image_dir
         magnificationFactor
         backgroundImage
+        randomizedOrder
     end
 
     methods
@@ -158,10 +159,10 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
         
             % Randomize if necessary
             if obj.randomize
-                randomizedOrder = randperm(5); % Get random order indices
-                images = images(randomizedOrder); % Apply random order to images
+                obj.randomizedOrder = randperm(5); % Get random order indices
+                images = images(obj.randomizedOrder); % Apply random order to images
             else
-                randomizedOrder = imageIndices; % Keep original order
+                obj.randomizedOrder = imageIndices; % Keep original order
             end
             obj.imageMatrix = images; % Store image
             
@@ -174,7 +175,7 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
         
             % Log metadata correctly
             epoch.addParameter('matFile', obj.matFiles{current_index});
-            epoch.addParameter('imageOrder', randomizedOrder);
+            epoch.addParameter('imageOrder', obj.randomizedOrder);
         
         end
 
