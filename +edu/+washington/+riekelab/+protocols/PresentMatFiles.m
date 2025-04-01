@@ -1,19 +1,14 @@
 % Loads and presents sets of 5 images contained within a .mat file within
 % a folder at the 'fileFolder' property.
 %
-% To determine the 'numberOfAverages' needed to present all of the images in the 
-% directory once, you would divide the number of images by the 'imagesPerEpoch'
-% property. If there are 1000 images and 'imagesPerEpoch' is 100, then the 
-% 'numberOfAverages' needed to present each image once is 1000/100 = 10.
-%
 % Analysis note:
-% Because we are presenting multiple images per epoch, the epoch property imageName 
-% that saves the image presented is now a list of all images presented in the correct 
-% order with each image delimited by a comma. This should make analyzing the data 
-% straightforward.
-%
-% Also, there is a magnificationFactor property that records the degree to which the
-% images were scaled in order to fill the screen.
+% Because we are presenting multiple images per epoch, the epoch property imageOrder 
+% saves the order in which the five images in the .mat file were presented.
+% 
+% For now images [1, 2, 3, 4, 5] correspond to [-5, -3, 0, 3, 5] diopters of
+% defocus. And the property "matFile" stores the name of the checkerboard
+% file, which includes a number in the file name couting from file #1 to
+% file #500.
 
 classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
     properties
