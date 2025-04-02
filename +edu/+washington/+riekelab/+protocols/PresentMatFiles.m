@@ -108,32 +108,18 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             
             % Only display images at appropriate times
             p.addStimulus(scene);
-            % sceneVisible = stage.builtin.controllers.PropertyController(scene, 'visible', ...
-            %     @(state)state.time >= obj.preTime * 1e-3 && state.time < (obj.preTime + obj.stimTime) * 1e-3);
             sceneVisible = stage.builtin.controllers.PropertyController(scene, 'visible', ...
                 @(state)state.frame >= obj.preFrames && state.frame < obj.preFrames + obj.stimFrames);
             p.addController(sceneVisible);
             
 
             % Cycle through the 5 images within the .mat file
-            % imgValue = stage.builtin.controllers.PropertyController(scene, ...
-            %     'imageMatrix', @(state)setImage(obj, state.time - obj.preTime * 1e-3));
             imgValue = stage.builtin.controllers.PropertyController(scene, ...
                 'imageMatrix', @(state)setImage(obj, state.frame - obj.preFrames));
             
             % Add the controller.
             p.addController(imgValue);
 
-            % function img = setImage(obj, time)
-            %     img_index = floor(time / ((obj.flashTime + obj.gapTime) * 1e-3)) + 1;
-            %     if img_index < 1 || img_index > obj.imagesPerEpoch
-            %         img = obj.backgroundImage;
-            %     elseif (time >= ((obj.flashTime+obj.gapTime)*1e-3)*(img_index-1)) && (time <= (((obj.flashTime+obj.gapTime)*1e-3)*(img_index-1)+obj.flashTime*1e-3))
-            %         img = obj.imageMatrix{img_index};
-            %     else
-            %         img = obj.backgroundImage;
-            %     end
-            % end
             function img = setImage(obj, frame)
                 img_index = floor(frame / (obj.flashFrames + obj.gapFrames)) + 1;
                 if img_index < 1 || img_index > obj.imagesPerEpoch
@@ -199,7 +185,7 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             epoch.addParameter('matFile', obj.matFiles{current_index});
             epoch.addParameter('imageOrder', obj.defocusStates(randomizedOrder));
             epoch.addParameter('magnificationFactor', obj.magnificationFactor);
-
+            
         
         end
 
