@@ -28,7 +28,6 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
 
     properties (Dependent)
         stimTime                      % Total stimulus duration per epoch
-        stimFrames
     end
 
     properties (Dependent, SetAccess = private)
@@ -47,6 +46,7 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
         flashFrames
         gapFrames
         tailFrames
+        stimFrames
     end
 
     methods
@@ -77,6 +77,7 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             obj.flashFrames = floor((obj.flashTime*1e-3)*obj.frameRate);
             obj.gapFrames = floor((obj.gapTime*1e-3)*obj.frameRate);
             obj.tailFrames = floor((obj.tailTime*1e-3)*obj.frameRate);
+            obj.stimFrames = floor((obj.stimTime*1e-3)*obj.frameRate);
 
             % Get list of .mat files in the directory
             matFile_dir = fullfile(obj.image_dir, obj.fileFolder); 
@@ -206,7 +207,6 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
 
         function stimTime = get.stimTime(obj)
             stimTime = obj.imagesPerEpoch * (obj.flashTime + obj.gapTime);
-            obj.stimFrames = floor((stimTime*1e-3)*obj.frameRate);
         end
 
         function a = get.amp2(obj)
