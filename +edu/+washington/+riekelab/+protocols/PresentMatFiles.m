@@ -45,7 +45,6 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
         preFrames
         flashFrames
         gapFrames
-        tailFrames
         stimFrames
     end
 
@@ -76,7 +75,6 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             obj.preFrames = floor((obj.preTime*1e-3)*obj.frameRate);
             obj.flashFrames = floor((obj.flashTime*1e-3)*obj.frameRate);
             obj.gapFrames = floor((obj.gapTime*1e-3)*obj.frameRate);
-            obj.tailFrames = floor((obj.tailTime*1e-3)*obj.frameRate);
             obj.stimFrames = floor((obj.stimTime*1e-3)*obj.frameRate);
 
             % Get list of .mat files in the directory
@@ -140,7 +138,7 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
                 img_index = floor(frame / (obj.flashFrames + obj.gapFrames)) + 1;
                 if img_index < 1 || img_index > obj.imagesPerEpoch
                     img = obj.backgroundImage;
-                elseif (frame >= (obj.flashFrame+obj.gapFrame)*(img_index-1)) && (frame <= ((obj.flashFrame+obj.gapFrame)*(img_index-1)+obj.flashFrame))
+                elseif (frame >= (obj.flashFrames+obj.gapFrames)*(img_index-1)) && (frame <= ((obj.flashFrames+obj.gapFrames)*(img_index-1)+obj.flashFrames))
                     img = obj.imageMatrix{img_index};
                 else
                     img = obj.backgroundImage;
