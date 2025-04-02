@@ -61,10 +61,10 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             try
                 obj.image_dir = obj.rig.getDevice('Stage').getConfigurationSetting('local_image_directory');
                 if isempty(obj.image_dir)
-                    obj.image_dir = 'C:\Users\dreze\UW\Defocus-Stim-Generation\src\';
+                    obj.image_dir = 'C:\Users\Public\Documents\GitRepos\Symphony2\flashed_images\';
                 end
             catch
-                obj.image_dir = 'C:\Users\dreze\UW\Defocus-Stim-Generation\src\';
+                obj.image_dir = 'C:\Users\Public\Documents\GitRepos\Symphony2\flashed_images\';
             end
 
             % Get list of .mat files in the directory
