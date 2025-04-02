@@ -35,14 +35,12 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
 
     properties (Hidden)
         ampType
-        frameRate
         onlineAnalysisType = symphonyui.core.PropertyType('char', 'row', {'none', 'extracellular', 'exc', 'inh'}) 
         matFiles
         imageMatrix
         image_dir
         magnificationFactor
         backgroundImage
-        randomizedOrder
     end
 
     methods
@@ -59,15 +57,13 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
                 obj.showFigure('symphonyui.builtin.figures.ResponseFigure', obj.rig.getDevice(obj.amp));
             end
 
-            obj.frameRate = obj.rig.getDevice('Stage').getMonitorRefreshRate();
-
             try
                 obj.image_dir = obj.rig.getDevice('Stage').getConfigurationSetting('local_image_directory');
                 if isempty(obj.image_dir)
-                    obj.image_dir = 'C:\Users\Public\Documents\GitRepos\Symphony2\flashed_images\';
+                    obj.image_dir = 'C:\Users\dreze\UW\Defocus-Stim-Generation\src\';
                 end
             catch
-                obj.image_dir = 'C:\Users\Public\Documents\GitRepos\Symphony2\flashed_images\';
+                obj.image_dir = 'C:\Users\dreze\UW\Defocus-Stim-Generation\src\';
             end
 
             % Get list of .mat files in the directory
@@ -159,10 +155,10 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
         
             % Randomize if necessary
             if obj.randomize
-                obj.randomizedOrder = randperm(5); % Get random order indices
-                images = images(obj.randomizedOrder); % Apply random order to images
+                randomizedOrder = randperm(5); % Get random order indices
+                images = images(randomizedOrder); % Apply random order to images
             else
-                obj.randomizedOrder = imageIndices; % Keep original order
+                randomizedOrder = imageIndices; % Keep original order
             end
             obj.imageMatrix = images; % Store image
             
@@ -175,7 +171,7 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
         
             % Log metadata correctly
             epoch.addParameter('matFile', obj.matFiles{current_index});
-            epoch.addParameter('imageOrder', obj.randomizedOrder);
+            epoch.addParameter('imageOrder', randomizedOrder);
         
         end
 
