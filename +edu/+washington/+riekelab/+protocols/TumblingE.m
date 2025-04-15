@@ -1,4 +1,4 @@
-classdef DovesMovie < manookinlab.protocols.ManookinLabStageProtocol
+classdef TumblingE < manookinlab.protocols.ManookinLabStageProtocol
     properties
         amp                             % Output amplifier
         preTime = 250                   % Stimulus leading duration (ms)
@@ -6,6 +6,7 @@ classdef DovesMovie < manookinlab.protocols.ManookinLabStageProtocol
         tailTime = 500                  % Stimulus trailing duration (ms)
         waitTime = 1000                 % Stimulus wait duration (ms)
         stimulusIndices = [2 6 12 18 24 30 40 50]         % Stimulus number (1:161)
+        backgroundIntensity = 0.45
         maskDiameter = 0                % Mask diameter in pixels
         apertureDiameter = 2000         % Aperture diameter in pixels.
         manualMagnification = 0         % Override DOVES magnification by setting this >1
