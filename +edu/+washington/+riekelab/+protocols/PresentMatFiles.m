@@ -167,7 +167,7 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
         
             % Randomize if necessary
             if obj.randomize
-                randomizedOrder = randperm(5); % Get random order indices
+                randomizedOrder = randperm(obj.imagesPerEpoch); % Get random order indices
                 images = images(randomizedOrder); % Apply random order to images
             else
                 randomizedOrder = imageIndices; % Keep original order

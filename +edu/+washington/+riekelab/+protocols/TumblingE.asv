@@ -116,7 +116,7 @@ classdef TumblingE < manookinlab.protocols.ManookinLabStageProtocol
                 elseif time > obj.timeTraj(end) %out of eye trajectory, hang on last frame
                     p(1) = p0(1) + obj.xTraj(end);
                     p(2) = p0(2) + obj.yTraj(end);
-                else % within eye trajectory and stim time
+                else %within eye trajectory and stim time
                     dx = interp1(obj.timeTraj,obj.xTraj,time);
                     dy = interp1(obj.timeTraj,obj.yTraj,time);
                     p(1) = p0(1) + dx;
