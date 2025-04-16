@@ -18,7 +18,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
     
     properties (Dependent)
         imagesPerEpoch
-        stimTime                        % Total stim time
+        stimTime                        % Total stim time for the full epoch
     end
     
     properties (Hidden)
