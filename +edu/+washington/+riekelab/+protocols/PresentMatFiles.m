@@ -184,8 +184,7 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             % Log metadata correctly
             epoch.addParameter('matFile', obj.matFiles{current_index});
             epoch.addParameter('imageOrder', obj.defocusStates(randomizedOrder));
-            epoch.addParameter('magnificationFactor', obj.magnificationFactor);
-            
+            epoch.addParameter('magnificationFactor', obj.magnificationFactor);     
         
         end
 

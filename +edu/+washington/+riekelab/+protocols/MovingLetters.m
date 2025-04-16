@@ -279,6 +279,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             epoch.addParameter('backgroundIntensity', obj.backgroundIntensity);
             epoch.addParameter('imageOrder', imageOrder)
             epoch.addParameter('distanceMoved', obj.movementMatrix)
+            epoch.addParameter('magnificationFactor', obj.magnificationFactor);
 
         end
         
