@@ -3,7 +3,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
     properties
         amp                             % Output amplifier
         preTime = 250                   % Stimulus leading duration (ms)
-        flashTime = 400                 % Flash duration (ms)
+        flashTime = 100                 % Flash duration (ms)
         tailTime = 250                  % Stimulus trailing duration (ms)
         gapTime = 400                   % Gap between images in ms
         backgroundIntensity = 0.45
@@ -71,7 +71,8 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             obj.stimFrames = floor((obj.stimTime*1e-3)*obj.frameRate);
             obj.tailFrames = floor((obj.tailTime*1e-3)*obj.frameRate);
             
-            % Get .mat file name from the directory
+            % Get .mat file name from the directory as a sanity check to
+            % make sure the correct file was loaded
             dir_contents = dir(fullfile(obj.imgDir, '*.mat'));
             obj.loadedFile = {dir_contents.name}; % Store file names
             
@@ -84,15 +85,22 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
         
         function createTrajectories(obj)
 
-            % movement trajectories
+            % create placeholder vectors of the right length for the
+            % stimuli (stimFrames), the gaps (gapFrames), and the tail
+            % trajectory (tailFrames)
             stimTrajectory_x = zeros(1,obj.stimFrames);
             stimTrajectory_y = zeros(1,obj.stimFrames);
-
             gapTrajectory = zeros(1,obj.gapFrames);
             tailTrajectory = zeros(1,obj.tailFrames);
             
+            % Each flash we display one iteration of flash frames + gap
+            % frames. This variable is used to populate stimTrajectory_x
+            % and stimTrajectory_y correctly so the movement only happens
+            % when the image is being flashed
             displayFrames = obj.flashFrames + obj.gapFrames;
             
+            % Pull X and Y axis movements and populate the two stim
+            % trajectory variables appropriately
             for i = 0:obj.imagesPerEpoch-1
                 
                 x_shift = obj.movementMatrix{i+1}(1);
@@ -106,46 +114,73 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
                     [flashTrajectory_y, gapTrajectory];
             end
 
-            fullTrajectory_x = [stimTrajectory_x, tailTrajectory];
-            fullTrajectory_y = [stimTrajectory_y, tailTrajectory];
+            % Concatenate the stim trajectories with the tail trajectory
+            % (which is just no movement) into the global xTraj and yTraj
+            % variables that now contain the full trajectory for the entire
+            % epoch
+            obj.xTraj = [stimTrajectory_x, tailTrajectory];
+            obj.yTraj = [stimTrajectory_y, tailTrajectory];
             
-            obj.xTraj = fullTrajectory_x;
-            obj.yTraj = fullTrajectory_y;
-            obj.frameTraj = 1:1:length(fullTrajectory_x);
+            % Generate the frame numbers for every single frame in the full
+            % x and y trajectory variables. This may seem strange but we
+            % need this because we can't index directly into xTraj and
+            % yTraj to set scene position (for some unholy reason).
+            obj.frameTraj = 1:1:length(obj.xTraj);
             
         end
         
         function p = createPresentation(obj)
+            % Create a presentation that's the correct length of time
             canvasSize = obj.rig.getDevice('Stage').getCanvasSize();
             totalTimePerEpoch = (obj.preTime + obj.stimTime + obj.tailTime)*1e-3;
             p = stage.core.Presentation(totalTimePerEpoch);
             
+            % Set the background color of the screen
             p.setBackgroundColor(obj.backgroundIntensity);
             
-            % Create your scene.
+            % Create an image scene using the first image in the stack
+            % contained inside imageMatrix and define p0 (the starting
+            % position) as the center pixel of the canvas
             scene = stage.builtin.stimuli.Image(obj.imageMatrix{1});
             scene.size = [size(obj.imageMatrix{1},2) size(obj.imageMatrix{1},1)]*obj.magnificationFactor;
             p0 = canvasSize / 2;
             scene.position = p0;
             
-            % Use linear interploation for scaling
+            % Ensure the scene uses linear interploation for scaling
             scene.setMinFunction(GL.NEAREST);
             scene.setMagFunction(GL.NEAREST);
             
-            % Add the stimulus to the presentation.
+            % Add the scene to the presentation.
             p.addStimulus(scene); 
             
+            % Create a visibility controller that makes the scene visible
+            % after preFrames have elapsed and then invisible once
+            % preFrames + stimFrames have elapsed.
             sceneVisible = stage.builtin.controllers.PropertyController(scene, 'visible', ...
                 @(state)state.frame >= obj.preFrames && state.frame < obj.preFrames + obj.stimFrames);
+            
+            % Add the visibility controller to the presentation
             p.addController(sceneVisible);
             
-            % Cycle through the images within the .mat file
+            % Create an imageMatrix controller that cycles through all of
+            % the images inside the imageMatrix cell array, and uses the
+            % setImage method to decide what image is currently being used
+            % to populate the scene
             imgValue = stage.builtin.controllers.PropertyController(scene, ...
                 'imageMatrix', @(state)setImage(obj, state.frame - obj.preFrames));
             
-            % Add the controller
+            % Add the imageMatrix controller to the presentation
             p.addController(imgValue);
             
+            % SetImage method outputs the image that should be shown and
+            % takes as input the current frame minus the pre-frames. This
+            % value is used to compute the "img_index" variable that
+            % essentially changes value for every complete cycle of flash
+            % frames + gap frames, starting at 0. The elseif condition is a
+            % little confusing but essentially ensures that the imageMatrix
+            % image is being shown only when flashFrames are being shown
+            % and not when gapFrames are shown or when preFrames and
+            % tailFrames are shown
             function img = setImage(obj, frame)
                 img_index = floor(frame / (obj.flashFrames + obj.gapFrames)) + 1;
                 if img_index < 1 || img_index > obj.imagesPerEpoch
@@ -157,15 +192,25 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
                 end
             end
             
-            % apply eye trajectories to move image around
+            % Create a position controller that uses the calculated X and Y
+            % trajectories to set the scene position.
             scenePosition = stage.builtin.controllers.PropertyController(scene,...
-                'position', @(state)getScenePosition(obj, state.frame - obj.preFrames, p0));
+                'position', @(state)setScenePosition(obj, state.frame - obj.preFrames, p0));
             
-            % Add the controller.
+            % Add the position controller to the presentation.
             p.addController(scenePosition);
             
-            
-            function p = getScenePosition(obj, frame, p0)
+            % Similar to the setImage method, the setScenePosition method
+            % uses the same img_index method to count frames and output the
+            % correct position "p" based on the xTraj and yTraj variables
+            % we created earlier. Note that we can't just index into xTraj
+            % and yTraj to get dx and dy. For some reason that doesn't
+            % work, so we "interpolate" using a vector that counts from 1
+            % to the total numbe of frames (frameTraj), the X and Y
+            % trajectories, and the current frame-preFrames. This assigns a
+            % single value to dx and dy, which are then added to p0 to
+            % shift the image around.
+            function p = setScenePosition(obj, frame, p0)
                 img_index = floor(frame / (obj.flashFrames + obj.gapFrames)) + 1;
                 if img_index < 1 || img_index > obj.imagesPerEpoch
                     p = p0;
@@ -204,11 +249,19 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             fields = fieldnames(data);
             matData = data.(fields{1});
             
-            % Create image matrix
+            % Create the image matrix, pulling three layers at a time to
+            % generate each RGB image and storing each image into a
+            % separate cell in the images variable
             images = cell(1,obj.numOrientations);
             for i = 1:obj.numOrientations
                 images{i} = matData(:,:, (3*i-2):(3*i));
             end
+
+            % Repeat this set of four images as many times as it takes to
+            % get every combination of E orientation, directions of
+            % movement, and scale of movement (4 orientations * 3
+            % directions * 3 scales of movement = 36 total images per
+            % epoch)
             images = repmat(images, 1, obj.numDirections * length(obj.movementScale));
 
             % Randomize if necessary 
@@ -221,8 +274,12 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
                 randomizedOrder = imageIndices;
             end
             
-            obj.imageMatrix = images; % store images
+            % Store the images inside the imageMatrix variable
+            obj.imageMatrix = images;
             
+            % Create a cell array of strings that stores the E orientations
+            % shown in plain english (i.e. 'up', 'down', 'left', and
+            % 'right')
             imageOrder = cell(1,obj.imagesPerEpoch);
             
             % Pull image order as cell array of strings for metadata
@@ -300,18 +357,25 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
 
         end
         
+        % Define images per epoch using number of orientations, number of
+        % directions, and number of number of different scales of movement.
         function imagesPerEpoch = get.imagesPerEpoch(obj)
             imagesPerEpoch = obj.numOrientations * obj.numDirections * length(obj.movementScale);
         end
         
+        % Define stim time as images per epoch * (flash time + gap time)
         function stimTime = get.stimTime(obj)
             stimTime = obj.imagesPerEpoch * (obj.flashTime + obj.gapTime);
         end
         
+        % Continue preparing epochs if the number of epochs prepared is
+        % less than the defined number of averages
         function tf = shouldContinuePreparingEpochs(obj)
             tf = obj.numEpochsPrepared < obj.numberOfAverages;
         end
         
+        % Continue this run if the number of epochs completed is less than
+        % the number of averages.
         function tf = shouldContinueRun(obj)
             tf = obj.numEpochsCompleted < obj.numberOfAverages;
         end
