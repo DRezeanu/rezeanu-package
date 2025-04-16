@@ -9,7 +9,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
         backgroundIntensity = 0.45
         numOrientations = 4
         numDirections = 3
-        matFile = 'tumblingE.mat'       % Filename of matfile with images in it
+        matFile = 'tumblingE_OFF.mat'       % Filename of matfile with images in it
         movementScale = [0.5, 1, 2]          % Scale in bar widths that the tumbling Es will move
         randomizePresentations = true    % Whether to randomize the order of images in each .mat file
         onlineAnalysis = 'extracellular'% Type of online analysis
