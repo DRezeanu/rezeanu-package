@@ -238,36 +238,51 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
                 end
             end
             
-            % Arrange all distances
+            % Arrange all movement distances starting with the shortest
+            % distance first, then the middle distance, then the longest
+            % distance. These don't need to be randomized. They'll be used
+            % to scale the movement trajectories below, and then the
+            % movement trajectories are randomized if the option to
+            % randomizePresentations is checked.
             distances = [repmat(obj.movementScale(1), 1, obj.imagesPerEpoch/length(obj.movementScale)),...
                 repmat(obj.movemetnScale(2), 1, obj.imagesPerEpoch/length(obj.movementScale)),....
                 repmat(obj.movementScale(3), 1, obj.imagesPerEpoch/length(obj.movementScale))];
 
-            % Arrange all movement Trajectories
-            
-            movement_idx = 1:3;
-            movement_vert = {[0,10], [-10,0], [10,0]};
-            movement_hor = {[-10,0], [10,0], [0,-10]};
+            % Assign movement trajectories to all stimuli based on whether
+            % the E is oriented vertically or horizontally. If the E is
+            % oriented vertically (pointing up or down) there is only one
+            % left-right movement trajectory since they are redundant, but
+            % there are separate up and down trajectories since they are
+            % different. If the E is oriented horizontally (pointing left
+            % or right) there is only one up-down movement trajectory but
+            % separate left and right movement trajectories.
+            trajectories_idx = 1:3;
+            vertical_E_trajectories = {[0,10], [-10,0], [10,0]};
+            horizontal_E_trajectories = {[-10,0], [10,0], [0,-10]};
 
-            total_movement = [repmat(movement_idx(1), 1, obj.imagesPerEpoch/length(movement_idx)),...
-                            repmat(movement_idx(2), 1, obj.imagesPerEpoch/length(movement_idx)),...
-                            repmat(movement_idx(3), 1, obj.imagesPerEpoch/length(movement_idx))];
-            total_movement = num2cell(total_movement);
+            movement_trajectories = [repmat(trajectories_idx(1), 1, obj.imagesPerEpoch/length(trajectories_idx)),...
+                            repmat(trajectories_idx(2), 1, obj.imagesPerEpoch/length(trajectories_idx)),...
+                            repmat(trajectories_idx(3), 1, obj.imagesPerEpoch/length(trajectories_idx))];
+            movement_trajectories = num2cell(movement_trajectories);
 
             for i = 1:obj.imagesPerEpoch
                 if mod(imageIndices(i),2) == 1
-                    total_movement{i} = floor(movement_vert{total_movement{i}}*distances(i));
+                    movement_trajectories{i} = floor(vertical_E_trajectories{movement_trajectories{i}}*distances(i));
                 else
-                    total_movement{i} = floor(movement_hor{total_movement{i}}*distances(i));
+                    movement_trajectories{i} = floor(horizontal_E_trajectories{movement_trajectories{i}}*distances(i));
                 end
             end
             
-            % Randomize movement order if randomize presntations is checked
-            if obj.randomizePresentations
-                total_movement = total_movement(randomizedOrder);
-            end
+            % Randomize movement order if randomize presntations is
+            % checked, note that the code above means "randomizedOrder" may
+            % not actually be randomized, so we don't have to include a
+            % second if statement here.
+            movement_trajectories = movement_trajectories(randomizedOrder);
             
-            obj.movementMatrix = total_movement;
+            % Assign movement trajectories to the movementMatrix property
+            % and then call createTrajectories to use that matrix to create
+            % the x and y trajectories for the entire epoch.
+            obj.movementMatrix = movement_trajectories;
             obj.createTrajectories()
 
             % Get the magnification factor to retain aspect ratio.
