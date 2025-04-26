@@ -142,7 +142,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             % contained inside imageMatrix and define p0 (the starting
             % position) as the center pixel of the canvas
             scene = stage.builtin.stimuli.Image(obj.imageMatrix{1});
-            scene.size = [size(obj.imageMatrix{1},2) size(obj.imageMatrix{1},1)]*obj.magnificationFactor;
+            scene.size = ceil([size(obj.imageMatrix{1},2) size(obj.imageMatrix{1},1)]*obj.magnificationFactor);
             p0 = canvasSize / 2;
             scene.position = p0;
             
@@ -343,7 +343,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             obj.createTrajectories()
 
             % Get the magnification factor to retain aspect ratio.
-            obj.magnificationFactor = ceil( max(obj.canvasSize(2)/size(obj.imageMatrix{1},1),obj.canvasSize(1)/size(obj.imageMatrix{1},2)) );
+            obj.magnificationFactor = max(obj.canvasSize(2)/size(obj.imageMatrix{1},1),obj.canvasSize(1)/size(obj.imageMatrix{1},2));
 
             % Create background image
             obj.backgroundImage = ones(size(images{1})) * obj.backgroundIntensity;
