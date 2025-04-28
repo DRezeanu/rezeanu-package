@@ -6,7 +6,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
         flashTime = 68                  % Flash duration (ms)
         tailTime = 250                  % Stimulus trailing duration (ms)
         gapTime = 400                   % Gap between images in ms
-        backgroundIntensity = 0.45
+        backgroundIntensity = 0.5
         numOrientations = 4
         numDirections = 4
         matFile = 'tumblingE_3.mat'       % Filename of matfile with images in it
@@ -142,7 +142,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             % contained inside imageMatrix and define p0 (the starting
             % position) as the center pixel of the canvas
             scene = stage.builtin.stimuli.Image(obj.imageMatrix{1});
-            scene.size = ceil([size(obj.imageMatrix{1},2) size(obj.imageMatrix{1},1)]*obj.magnificationFactor);
+            scene.size = [size(obj.imageMatrix{1},2) size(obj.imageMatrix{1},1)]*obj.magnificationFactor;
             p0 = canvasSize / 2;
             scene.position = p0;
             
@@ -222,8 +222,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
                 else
                     p = p0;
                 end
-            end
-            
+            end  
             
         end
         
@@ -339,10 +338,10 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             obj.createTrajectories()
 
             % Get the magnification factor to retain aspect ratio.
-            obj.magnificationFactor = max(obj.canvasSize(2)/size(obj.imageMatrix{1},1),obj.canvasSize(1)/size(obj.imageMatrix{1},2));
+            obj.magnificationFactor = ceil( max(obj.canvasSize(2)/size(obj.imageMatrix{1},1),obj.canvasSize(1)/size(obj.imageMatrix{1},2)) );
 
             % Create background image
-            obj.backgroundImage = ones(size(images{1})) * obj.backgroundIntensity;
+            obj.backgroundImage = ones(size(obj.imageMatrix{1})) * obj.backgroundIntensity;
             obj.backgroundImage = uint8(obj.backgroundImage*255);
 
             % Save the parameters.
