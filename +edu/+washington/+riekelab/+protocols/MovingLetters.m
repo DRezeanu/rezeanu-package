@@ -318,7 +318,8 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
 
             movement_trajectories = [repmat(trajectories_idx(1), 1, obj.imagesPerEpoch/length(trajectories_idx)),...
                             repmat(trajectories_idx(2), 1, obj.imagesPerEpoch/length(trajectories_idx)),...
-                            repmat(trajectories_idx(3), 1, obj.imagesPerEpoch/length(trajectories_idx))];
+                            repmat(trajectories_idx(3), 1, obj.imagesPerEpoch/length(trajectories_idx)),...
+                            repmat(trajectories_idx(4), 1, obj.imagesPerEpoch/length(trajectories_idx))];
             movement_trajectories = num2cell(movement_trajectories);
 
             for i = 1:obj.imagesPerEpoch
