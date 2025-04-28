@@ -8,7 +8,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
         gapTime = 400                   % Gap between images in ms
         backgroundIntensity = 0.45
         numOrientations = 4
-        numDirections = 4
+        numDirections = 3
         matFile = 'tumblingE_3.mat'       % Filename of matfile with images in it
         movementScale = [0.5, 1, 2]       % Scale in bar widths that the tumbling Es will move
         randomizePresentations = true    % Whether to randomize the order of images in each .mat file
@@ -322,7 +322,11 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             movement_trajectories = num2cell(movement_trajectories);
 
             for i = 1:obj.imagesPerEpoch
-                movement_trajectories{i} = floor(trajectories{movement_trajectories{i}}*distances(i));
+                if mod(imageIndices(i),2) == 1
+                    movement_trajectories{i} = floor(vertical_E_trajectories{movement_trajectories{i}}*distances(i));
+                else
+                    movement_trajectories{i} = floor(horizontal_E_trajectories{movement_trajectories{i}}*distances(i));
+                end
             end
             
             % Randomize movement order if randomize presntations is
