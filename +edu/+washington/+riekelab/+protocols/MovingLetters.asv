@@ -118,6 +118,9 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
                     [flashTrajectory_y, gapTrajectory];
             end
 
+            figure(1)
+            plot(fl)
+
             % Concatenate the stim trajectories with the tail trajectory
             % (which is just no movement) into the global xTraj and yTraj
             % variables that now contain the full trajectory for the entire
