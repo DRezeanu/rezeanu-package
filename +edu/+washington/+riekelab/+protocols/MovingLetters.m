@@ -61,10 +61,10 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             try
                 obj.imgDir = obj.rig.getDevice('Stage').getConfigurationSetting('local_image_directory');
                 if isempty(obj.imgDir)
-                    obj.imgDir = 'C:\Users\dreze\UW\letter_motion';
+                    obj.imgDir = 'C:\Users\Public\Documents\GitRepos\Symphony2\flashed_images\letter_motion';
                 end
             catch
-                obj.imgDir = 'C:\Users\dreze\UW\letter_motion';
+                obj.imgDir = 'C:\Users\Public\Documents\GitRepos\Symphony2\flashed_images\letter_motion';
             end
 
             % Get frame counts
