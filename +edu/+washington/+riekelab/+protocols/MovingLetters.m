@@ -9,7 +9,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
         backgroundIntensity = 0.5
         numOrientations = 4
         numDirections = 4
-        matFile = 'tumblingE_3.mat'      % Filename of matfile with images in it
+        matFile = 'tumblingE_tight.mat'  % Filename of matfile with images in it
         movementScale = [0.5, 1, 2]      % Scale in bar widths that the tumbling Es will move
         randomizePresentations = true    % Whether to randomize the order of images in each .mat file
         onlineAnalysis = 'none'          % Type of online analysis
@@ -61,7 +61,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             try
                 obj.imgDir = obj.rig.getDevice('Stage').getConfigurationSetting('local_image_directory');
                 if isempty(obj.imgDir)
-                    obj.imgDir = 'C:\Users\dreze\UW\letter_motion\';
+                    obj.imgDir = 'C:\Users\dreze\UW\letter_motion';
                 end
             catch
                 obj.imgDir = 'C:\Users\dreze\UW\letter_motion';
@@ -147,6 +147,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             % position) as the center pixel of the canvas
             scene = stage.builtin.stimuli.Image(obj.imageMatrix{1});
             scene.size = floor([size(obj.imageMatrix{1},2) size(obj.imageMatrix{1},1)]*obj.magnificationFactor);
+
             p0 = canvasSize / 2;
             scene.position = p0;
 
@@ -199,8 +200,8 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             % Create a position controller that uses the calculated X and Y
             % trajectories to set the scene position.
             scenePosition = stage.builtin.controllers.PropertyController(scene,...
-                'position', @(state)setScenePosition(obj, state.frame - obj.preFrames, p0));
-            
+                'position', @(state)getScenePosition(obj, state.frame - obj.preFrames, p0));
+
             % Add the position controller to the presentation.
             p.addController(scenePosition);
 
@@ -214,7 +215,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             % trajectories, and the current frame-preFrames. This assigns a
             % single value to dx and dy, which are then added to p0 to
             % shift the image around.
-            function pos = setScenePosition(obj, frame, p0)
+            function pos = getScenePosition(obj, frame, p0)
                 img_index = floor(frame / (obj.flashFrames + obj.gapFrames)) + 1;
                 if img_index < 1 || img_index > obj.imagesPerEpoch
                     pos = p0;
@@ -226,7 +227,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
                 else
                     pos = p0;
                 end
-            end  
+            end
 
         end
         
@@ -339,7 +340,6 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             % and then call createTrajectories to use that matrix to create
             % the x and y trajectories for the entire epoch.
             obj.movementMatrix = movement_trajectories;
-
             obj.createTrajectories()
 
             % Get the magnification factor to retain aspect ratio.
@@ -351,8 +351,8 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
 
             % Save the parameters.
             epoch.addParameter('backgroundIntensity', obj.backgroundIntensity);
-            epoch.addParameter('imageOrder', imageOrder)
-            % epoch.addParameter('distanceMoved', obj.movementMatrix)
+            epoch.addParameter('imageOrder', imageOrder);
+            % epoch.addParameter('distanceMoved', obj.movementMatrix);
             epoch.addParameter('magnificationFactor', obj.magnificationFactor);
 
         end
