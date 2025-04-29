@@ -203,7 +203,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             
             % Add the position controller to the presentation.
             p.addController(scenePosition);
-            
+
             % Similar to the setImage method, the setScenePosition method
             % uses the same img_index method to count frames and output the
             % correct position "p" based on the xTraj and yTraj variables
@@ -227,7 +227,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
                     pos = p0;
                 end
             end  
-            
+
         end
         
         function prepareEpoch(obj, epoch)
@@ -352,7 +352,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             % Save the parameters.
             epoch.addParameter('backgroundIntensity', obj.backgroundIntensity);
             epoch.addParameter('imageOrder', imageOrder)
-            epoch.addParameter('distanceMoved', obj.movementMatrix)
+            % epoch.addParameter('distanceMoved', obj.movementMatrix)
             epoch.addParameter('magnificationFactor', obj.magnificationFactor);
 
         end
