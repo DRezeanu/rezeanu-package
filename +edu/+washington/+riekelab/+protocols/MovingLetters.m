@@ -9,10 +9,10 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
         backgroundIntensity = 0.5
         numOrientations = 4
         numDirections = 4
-        matFile = 'tumblingE_3.mat'       % Filename of matfile with images in it
-        movementScale = [0.5, 1, 2]       % Scale in bar widths that the tumbling Es will move
+        matFile = 'tumblingE_3.mat'      % Filename of matfile with images in it
+        movementScale = [0.5, 1, 2]      % Scale in bar widths that the tumbling Es will move
         randomizePresentations = true    % Whether to randomize the order of images in each .mat file
-        onlineAnalysis = 'extracellular'% Type of online analysis
+        onlineAnalysis = 'none'          % Type of online analysis
         numberOfAverages = uint16(100)   % Number of epochs
     end
     
@@ -20,10 +20,14 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
         imagesPerEpoch
         stimTime                        % Total stim time for the full epoch
     end
+
+    properties (Dependent, SetAccess = private)
+        amp2                            % Secondary amplifier
+    end
     
     properties (Hidden)
         ampType
-        onlineAnalysisType = symphonyui.core.PropertyType('char', 'row', {'none', 'extracellular', 'spikes_CClamp', 'subthresh_CClamp', 'analog'})
+        onlineAnalysisType = symphonyui.core.PropertyType('char', 'row', {'none', 'extracellular', 'exc', 'inh'})
         imageMatrix
         movementMatrix
         xTraj
@@ -53,8 +57,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             if ~obj.isMeaRig
                 obj.showFigure('symphonyui.builtin.figures.ResponseFigure', obj.rig.getDevice(obj.amp));
             end
-            
-            % Get the resources directory.
+
             try
                 obj.imgDir = obj.rig.getDevice('Stage').getConfigurationSetting('local_image_directory');
                 if isempty(obj.imgDir)
@@ -258,7 +261,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
 
             % Repeat this set of four images as many times as it takes to
             % get every combination of E orientation, directions of
-            % movement, and scale of movement (4 orientations * 3
+            % movement, and scale of movement (4 orientations * 4
             % directions * 3 scales of movement = 36 total images per
             % epoch)
             images = repmat(images, 1, obj.numDirections * length(obj.movementScale));
@@ -361,6 +364,16 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
         % Define stim time as images per epoch * (flash time + gap time)
         function stimTime = get.stimTime(obj)
             stimTime = obj.imagesPerEpoch * (obj.flashTime + obj.gapTime);
+        end
+
+        function a = get.amp2(obj)
+            amps = obj.rig.getDeviceNames('Amp');
+            if numel(amps) < 2
+                a = '(None)';
+            else
+                i = find(~ismember(amps, obj.amp), 1);
+                a = amps{i};
+            end
         end
         
         % Continue preparing epochs if the number of epochs prepared is
