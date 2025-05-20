@@ -74,13 +74,6 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             obj.stimFrames = (obj.gapFrames + obj.flashFrames) * obj.imagesPerEpoch;
             obj.tailFrames = floor((obj.tailTime*1e-3)*obj.frameRate);
             
-            disp(['Frame rate: ', num2str(obj.frameRate)])
-            disp(['Pre frames: ', num2str(obj.preFrames)])
-            disp(['Flash frames: ', num2str(obj.flashFrames)])
-            disp(['Gap frames: ', num2str(obj.gapFrames)])
-            disp(['Stim frames: ', num2str(obj.stimFrames)])
-            disp(['Tail frames: ', num2str(obj.tailFrames)])
-            
             % Get .mat file name from the directory as a sanity check to
             % make sure the correct file was loaded
             dir_contents = dir(fullfile(obj.imgDir, '*.mat'));
@@ -90,7 +83,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
                 error('No .mat files found in image directory. \n');
             end
             
-            fprintf('Loaded %s from image directory.\n', obj.loadedFile{1});
+            fprintf('Loaded mat file from image directory.\n');
 
         end
         

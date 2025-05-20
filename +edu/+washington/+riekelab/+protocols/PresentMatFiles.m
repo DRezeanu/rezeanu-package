@@ -76,13 +76,6 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             obj.flashFrames = floor((obj.flashTime*1e-3)*obj.frameRate);
             obj.gapFrames = floor((obj.gapTime*1e-3)*obj.frameRate);
             obj.stimFrames = (obj.gapFrames + obj.flashFrames) * obj.imagesPerEpoch;
-            
-            disp(['Frame rate: ', num2str(obj.frameRate)])
-            disp(['Pre frames: ', num2str(obj.preFrames)])
-            disp(['Flash frames: ', num2str(obj.flashFrames)])
-            disp(['Gap frames: ', num2str(obj.gapFrames)])
-            disp(['Stim frames: ', num2str(obj.stimFrames)])
-            disp(['Tail frames: ', num2str(obj.preFrames)])
 
             % Get list of .mat files in the directory
             matFile_dir = fullfile(obj.image_dir, obj.fileFolder); 
