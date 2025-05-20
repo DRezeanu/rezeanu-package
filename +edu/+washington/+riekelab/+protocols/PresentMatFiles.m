@@ -28,6 +28,11 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
 
     properties (Dependent)
         stimTime                      % Total stimulus duration per epoch
+        preFrames
+        flashFrames
+        gapFrames
+        stimFrames
+        tailFrames
     end
 
     properties (Dependent, SetAccess = private)
@@ -42,10 +47,6 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
         image_dir
         magnificationFactor
         backgroundImage
-        preFrames
-        flashFrames
-        gapFrames
-        stimFrames
     end
 
     methods
@@ -71,12 +72,6 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
                 obj.image_dir = 'C:\Users\Public\Documents\GitRepos\Symphony2\flashed_images\';
             end
 
-            % Get frame counts
-            obj.preFrames = floor((obj.preTime*1e-3)*obj.frameRate);
-            obj.flashFrames = floor((obj.flashTime*1e-3)*obj.frameRate);
-            obj.gapFrames = floor((obj.gapTime*1e-3)*obj.frameRate);
-            obj.stimFrames = (obj.gapFrames + obj.flashFrames) * obj.imagesPerEpoch;
-
             % Get list of .mat files in the directory
             matFile_dir = fullfile(obj.image_dir, obj.fileFolder); 
             dir_contents = dir(fullfile(matFile_dir, '*.mat'));
@@ -92,7 +87,7 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
         function p = createPresentation(obj)
             % Stage presentation setup
             canvasSize = obj.rig.getDevice('Stage').getCanvasSize();
-            totalTimePerEpoch = (obj.preTime + obj.stimTime + obj.tailTime)*1e-3;
+            totalTimePerEpoch = ceil((obj.preFrames + obj.stimFrames + obj.tailFrames)/60);
             p = stage.core.Presentation(totalTimePerEpoch);
             
             p.setBackgroundColor(obj.backgroundIntensity); % Set background intensity 
@@ -185,15 +180,32 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             epoch.addParameter('matFile', obj.matFiles{current_index});
             epoch.addParameter('imageOrder', obj.defocusStates(randomizedOrder));
             epoch.addParameter('magnificationFactor', obj.magnificationFactor);
-            epoch.addParameter('preFrames', obj.preFrames);
-            epoch.addParameter('flashFrame', obj.flashFrames);
-            epoch.addParameter('gapFrames', obj.gapFrames);
-            epoch.addParameter('stimFrames', obj.stimFrames);
         
         end
 
         function stimTime = get.stimTime(obj)
-            stimTime = obj.imagesPerEpoch * (obj.flashTime + obj.gapTime);
+            stimTime = ceil(obj.stimFrames / 60 * 1e3);
+        end
+
+        % Get frame counts
+        function preFrames = get.preFrames(obj)
+            preFrames = floor((obj.preTime*1e-3)*60);
+        end
+        
+        function flashFrames = get.flashFrames(obj)
+            flashFrames = floor((obj.flashTime*1e-3)*60);
+        end
+
+        function gapFrames = get.gapFrames(obj)
+            gapFrames = floor((obj.gapTime*1e-3)*60);
+        end
+
+        function stimFrames = get.stimFrames(obj)
+            stimFrames = (obj.gapFrames + obj.flashFrames) * obj.imagesPerEpoch;
+        end
+
+        function tailFrames = get.tailFrames(obj)
+            tailFrames = floor((obj.tailTime*1e-3)*60);
         end
 
         function a = get.amp2(obj)

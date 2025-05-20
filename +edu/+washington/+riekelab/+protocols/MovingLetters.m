@@ -131,7 +131,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
         function p = createPresentation(obj)
             % Create a presentation that's the correct length of time
             canvasSize = obj.rig.getDevice('Stage').getCanvasSize();
-            totalTimePerEpoch = (obj.preTime + obj.stimTime + obj.tailTime)*1e-3;
+            totalTimePerEpoch = ceil((obj.preFrames + obj.stimFrames + obj.tailFrames)/60);
             p = stage.core.Presentation(totalTimePerEpoch);
 
             % Set the background color of the screen
@@ -359,7 +359,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
         
         % Define stim time as images per epoch * (flash time + gap time)
         function stimTime = get.stimTime(obj)
-            stimTime = obj.imagesPerEpoch * (obj.flashTime + obj.gapTime);
+            stimTime = ceil(obj.stimFrames / 60 * 1e3);
         end
 
         % Get frame counts
