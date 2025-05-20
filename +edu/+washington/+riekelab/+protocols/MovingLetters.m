@@ -351,8 +351,8 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
 
             % Save the parameters.
             epoch.addParameter('backgroundIntensity', obj.backgroundIntensity);
-            epoch.addParameter('imageOrder', imageOrder);
-            epoch.addParameter('distanceMoved', obj.movementMatrix);
+            epoch.addParameter('imageOrientation', imageOrder);
+            epoch.addParameter('imageMovement', obj.movementMatrix);
             epoch.addParameter('magnificationFactor', obj.magnificationFactor);
             epoch.addParameter('stimFrames', obj.stimFrames);
             epoch.addParameter('preFrames', obj.preFrames);
