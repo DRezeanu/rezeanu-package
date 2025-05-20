@@ -73,6 +73,12 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             obj.gapFrames = floor((obj.gapTime*1e-3)*obj.frameRate);
             obj.stimFrames = floor((obj.stimTime*1e-3)*obj.frameRate);
             obj.tailFrames = floor((obj.tailTime*1e-3)*obj.frameRate);
+
+            disp(["Pre frames: ", num2str(obj.preFrames)])
+            disp(["Flash frames: ", num2str(obj.flashFrames)])
+            disp(["Gap frames: ", num2str(obj.gapFrames)])
+            disp(["Stim frames: ", num2str(obj.stimFrames)])
+            disp(["Tail frames: ", num2str(obj.tailFrames)])
             
             % Get .mat file name from the directory as a sanity check to
             % make sure the correct file was loaded
