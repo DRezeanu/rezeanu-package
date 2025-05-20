@@ -75,8 +75,9 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             obj.preFrames = floor((obj.preTime*1e-3)*obj.frameRate);
             obj.flashFrames = floor((obj.flashTime*1e-3)*obj.frameRate);
             obj.gapFrames = floor((obj.gapTime*1e-3)*obj.frameRate);
-            obj.stimFrames = floor((obj.stimTime*1e-3)*obj.frameRate);
-
+            obj.stimFrames = (obj.gapFrames + obj.flashFrames) * obj.imagesPerEpoch;
+            
+            disp(['Frame rate: ', num2str(obj.frameRate)])
             disp(['Pre frames: ', num2str(obj.preFrames)])
             disp(['Flash frames: ', num2str(obj.flashFrames)])
             disp(['Gap frames: ', num2str(obj.gapFrames)])
