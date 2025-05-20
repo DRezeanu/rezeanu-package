@@ -19,6 +19,11 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
     properties (Dependent)
         imagesPerEpoch
         stimTime                        % Total stim time for the full epoch
+        preFrames
+        flashFrames
+        gapFrames
+        tailFrames
+        stimFrames
     end
 
     properties (Dependent, SetAccess = private)
@@ -36,11 +41,6 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
         magnificationFactor
         backgroundImage
         imgDir
-        preFrames
-        flashFrames
-        gapFrames
-        tailFrames
-        stimFrames
         loadedFile
     end
     
@@ -67,12 +67,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
                 obj.imgDir = 'C:\Users\Public\Documents\GitRepos\Symphony2\flashed_images\letter_motion';
             end
 
-            % Get frame counts
-            obj.preFrames = floor((obj.preTime*1e-3)*obj.frameRate);
-            obj.flashFrames = floor((obj.flashTime*1e-3)*obj.frameRate);
-            obj.gapFrames = floor((obj.gapTime*1e-3)*obj.frameRate);
-            obj.stimFrames = (obj.gapFrames + obj.flashFrames) * obj.imagesPerEpoch;
-            obj.tailFrames = floor((obj.tailTime*1e-3)*obj.frameRate);
+            
             
             % Get .mat file name from the directory as a sanity check to
             % make sure the correct file was loaded
@@ -354,12 +349,6 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             epoch.addParameter('imageOrientation', imageOrder);
             epoch.addParameter('imageMovement', obj.movementMatrix);
             epoch.addParameter('magnificationFactor', obj.magnificationFactor);
-            epoch.addParameter('stimFrames', obj.stimFrames);
-            epoch.addParameter('preFrames', obj.preFrames);
-            epoch.addParameter('flashFrames', obj.flashFrames);
-            epoch.addParameter('gapFrames', obj.gapFrames);
-            epoch.addParameter('tailFrames', obj.tailFrames);
-
         end
         
         % Define images per epoch using number of orientations, number of
@@ -372,6 +361,28 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
         function stimTime = get.stimTime(obj)
             stimTime = obj.imagesPerEpoch * (obj.flashTime + obj.gapTime);
         end
+
+        % Get frame counts
+        function preFrames = get.preFrames(obj)
+            preFrames = floor((obj.preTime*1e-3)*60);
+        end
+
+        function flashFrames = get.flashFrames(obj)
+            flashFrames = floor((obj.flashTime*1e-3)*60);
+        end
+
+        function gapFrames = get.gapFrames(obj)
+            gapFrames = floor((obj.gapTime*1e-3)*60);
+        end
+
+        function stimFrames = get.stimFrames(obj)
+            stimFrames = (obj.gapFrames + obj.flashFrames) * obj.imagesPerEpoch;
+        end
+
+        function tailFrames = get.tailFrames(obj)
+            tailFrames = floor((obj.tailTime*1e-3)*60);
+        end
+
 
         function a = get.amp2(obj)
             amps = obj.rig.getDeviceNames('Amp');
