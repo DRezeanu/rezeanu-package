@@ -324,6 +324,8 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             for i = 1:obj.imagesPerEpoch
                 movement_trajectories{i} = floor(trajectories{movement_trajectories{i}}*distances(i));
             end
+
+            disp(size(movement_trajectories))
             
             % Randomize movement order if randomize presntations is
             % checked, note that the code above means "randomizedOrder" may
