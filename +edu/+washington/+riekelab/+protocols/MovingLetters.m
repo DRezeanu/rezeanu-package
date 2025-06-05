@@ -323,19 +323,11 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
                 movement_trajectories{i} = floor(trajectories{movement_trajectories{i}}*distances(i));
             end
             
-            for i = 1:obj.imagesPerEpoch
-                disp(movement_trajectories{i})
-            end
-            
             % Randomize movement order if randomize presntations is
             % checked, note that the code above means "randomizedOrder" may
             % not actually be randomized, so we don't have to include a
             % second if statement here.
             movement_trajectories = movement_trajectories(randomizedOrder);
-
-            for i = 1:obj.imagesPerEpoch
-                disp(movement_trajectories{i})
-            end
             
             % Assign movement trajectories to the movementMatrix property
             % and then call createTrajectories to use that matrix to create
@@ -355,6 +347,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             epoch.addParameter('imageOrientation', imageOrder);
             epoch.addParameter('imageMovement', obj.movementMatrix);
             epoch.addParameter('magnificationFactor', obj.magnificationFactor);
+            epoch.addParameter('randomizedOrder', randomizedOrder)
         end
         
         % Define images per epoch using number of orientations, number of
