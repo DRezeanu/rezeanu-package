@@ -300,9 +300,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             % to scale the movement trajectories below, and then the
             % movement trajectories are randomized if the option to
             % randomizePresentations is checked.
-            distances = [repmat(obj.movementScale(1), 1, obj.imagesPerEpoch/length(obj.movementScale)),...
-                repmat(obj.movementScale(2), 1, obj.imagesPerEpoch/length(obj.movementScale)),....
-                repmat(obj.movementScale(3), 1, obj.imagesPerEpoch/length(obj.movementScale))];
+            distances = repmat(obj.movementScale, 1, obj.imagesPerEpoch/length(obj.movementScale));
 
             % Assign movement trajectories to all stimuli based on whether
             % the E is oriented vertically or horizontally. If the E is
@@ -325,7 +323,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
                 movement_trajectories{i} = floor(trajectories{movement_trajectories{i}}*distances(i));
             end
 
-            disp(size(movement_trajectories))
+            disp(movement_trajectories)
             
             % Randomize movement order if randomize presntations is
             % checked, note that the code above means "randomizedOrder" may
