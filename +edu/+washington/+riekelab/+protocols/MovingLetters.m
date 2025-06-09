@@ -300,7 +300,13 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             % to scale the movement trajectories below, and then the
             % movement trajectories are randomized if the option to
             % randomizePresentations is checked.
-            distances = repmat(obj.movementScale, 1, obj.imagesPerEpoch/length(obj.movementScale));
+            % distances = repmat(obj.movementScale, 1, obj.imagesPerEpoch/length(obj.movementScale));
+            distances = zeros(1,obj.imagesPerEpoch);
+            step = obj.imagesPerEpoch/length(obj.movementScale);
+            
+            for i = 1:length(obj.movementScale)
+                distances(i*step-step+1:i*step) = repmat(obj.movementScale(i), 1, obj.imagesPerEpoch/length(obj.movementScale));
+            end
 
             % Assign movement trajectories to all stimuli based on whether
             % the E is oriented vertically or horizontally. If the E is
@@ -310,15 +316,31 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             % different. If the E is oriented horizontally (pointing left
             % or right) there is only one up-down movement trajectory but
             % separate left and right movement trajectories.
+            % trajectories_idx = 1:4;
+            % trajectories = {[0,10], [10,0], [0,-10], [-10,0]};
+            % 
+            % movement_trajectories = [repmat(trajectories_idx(1), 1, obj.imagesPerEpoch/length(trajectories_idx)),...
+            %                 repmat(trajectories_idx(2), 1, obj.imagesPerEpoch/length(trajectories_idx)),...
+            %                 repmat(trajectories_idx(3), 1, obj.imagesPerEpoch/length(trajectories_idx)),...
+            %                 repmat(trajectories_idx(4), 1, obj.imagesPerEpoch/length(trajectories_idx))];
+            % movement_trajectories = num2cell(movement_trajectories);
+            % 
+            % for i = 1:obj.imagesPerEpoch
+            %     movement_trajectories{i} = floor(trajectories{movement_trajectories{i}}*distances(i));
+            % end
+
             trajectories_idx = 1:4;
             trajectories = {[0,10], [10,0], [0,-10], [-10,0]};
-
-            movement_trajectories = [repmat(trajectories_idx(1), 1, obj.imagesPerEpoch/length(trajectories_idx)),...
-                            repmat(trajectories_idx(2), 1, obj.imagesPerEpoch/length(trajectories_idx)),...
-                            repmat(trajectories_idx(3), 1, obj.imagesPerEpoch/length(trajectories_idx)),...
-                            repmat(trajectories_idx(4), 1, obj.imagesPerEpoch/length(trajectories_idx))];
+            
+            movement_trajectories = [repmat(trajectories_idx(1), 1, obj.numOrientations),...
+                            repmat(trajectories_idx(2), 1, obj.numOrientations),...
+                            repmat(trajectories_idx(3), 1, obj.numOrientations),...
+                            repmat(trajectories_idx(4), 1, obj.numOrientations)];
+            
+            movement_trajectories = repmat(movement_trajectories, 1, length(obj.movementScale));
+            
             movement_trajectories = num2cell(movement_trajectories);
-
+            
             for i = 1:obj.imagesPerEpoch
                 movement_trajectories{i} = floor(trajectories{movement_trajectories{i}}*distances(i));
             end
