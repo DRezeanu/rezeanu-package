@@ -349,6 +349,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             % checked, note that the code above means "randomizedOrder" may
             % not actually be randomized, so we don't have to include a
             % second if statement here.
+            disp(movement_trajectories)
             movement_trajectories = movement_trajectories(randomizedOrder);
             
             % Assign movement trajectories to the movementMatrix property
