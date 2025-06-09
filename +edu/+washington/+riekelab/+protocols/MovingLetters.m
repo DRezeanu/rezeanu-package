@@ -10,7 +10,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
         numOrientations = 4
         numDirections = 4
         matFile = 'tumblingE_medium.mat'  % Filename of matfile with images in it
-        movementScale = [0.5, 1, 2]      % Scale in bar widths that the tumbling Es will move
+        movementScale = [0, 0.5, 1, 2]      % Scale in bar widths that the tumbling Es will move
         randomizePresentations = true    % Whether to randomize the order of images in each .mat file
         onlineAnalysis = 'none'          % Type of online analysis
         numberOfAverages = uint16(100)   % Number of epochs
@@ -349,7 +349,10 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             % checked, note that the code above means "randomizedOrder" may
             % not actually be randomized, so we don't have to include a
             % second if statement here.
-            disp(movement_trajectories)
+            for i = 1:obj.imagesPerEpoch
+                disp(movement_trajectories{i})
+            end
+
             movement_trajectories = movement_trajectories(randomizedOrder);
             
             % Assign movement trajectories to the movementMatrix property
