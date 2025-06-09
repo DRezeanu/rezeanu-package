@@ -214,7 +214,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
                 img_index = floor(frame / (obj.flashFrames + obj.gapFrames)) + 1;
                 if img_index < 1 || img_index > obj.imagesPerEpoch
                     pos = p0;
-                elseif (frame >= (obj.flashFrames+obj.gapFrames)*(img_index-1)) && (frame <= ((obj.flashFrames+obj.gapFrames)*(img_index-1)+obj.flashFrames))
+                elseif (frame >= (obj.flashFrames+obj.gapFrames)*(img_index-1)) && (frame < ((obj.flashFrames+obj.gapFrames)*(img_index-1)+obj.flashFrames))
                     dx = interp1(obj.frameTraj, obj.xTraj, frame);
                     dy = interp1(obj.frameTraj, obj.yTraj, frame);
                     pos(1) = p0(1)+dx;
