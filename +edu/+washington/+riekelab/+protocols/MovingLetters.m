@@ -349,10 +349,6 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             % checked, note that the code above means "randomizedOrder" may
             % not actually be randomized, so we don't have to include a
             % second if statement here.
-            for i = 1:obj.imagesPerEpoch
-                disp(movement_trajectories{i})
-            end
-
             movement_trajectories = movement_trajectories(randomizedOrder);
             
             % Assign movement trajectories to the movementMatrix property
