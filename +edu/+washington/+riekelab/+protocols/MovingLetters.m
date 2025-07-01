@@ -363,7 +363,9 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             % Create background image
             obj.backgroundImage = ones(size(obj.imageMatrix{1})) * obj.backgroundIntensity;
             obj.backgroundImage = uint8(obj.backgroundImage*255);
-
+            
+            disp(string(imageOrder));
+            
             % Save the parameters.
             epoch.addParameter('backgroundIntensity', obj.backgroundIntensity);
             epoch.addParameter('imageOrientation', imageOrder);
