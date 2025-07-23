@@ -19,11 +19,11 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
     properties (Dependent)
         imagesPerEpoch
         stimTime                        % Total stim time for the full epoch
-        preFrames
-        flashFrames
-        gapFrames
-        stimFrames
-        tailFrames
+        % preFrames
+        % flashFrames
+        % gapFrames
+        % stimFrames
+        % tailFrames
     end
 
     properties (Dependent, SetAccess = private)
@@ -42,6 +42,11 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
         backgroundImage
         imgDir
         loadedFile
+        preFrames
+        flashFrames
+        gapFrames
+        stimFrames
+        tailFrames
     end
     
     methods
@@ -67,8 +72,12 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
                 obj.imgDir = 'C:\Users\Public\Documents\GitRepos\Symphony2\flashed_images\letter_motion';
             end
 
-            
-            
+            obj.preFrames = round((obj.preTime * 1e-3) * 60);
+            obj.flashFrames = round((obj.flashTime * 1e-3) * 60);
+            obj.gapFrames = round((obj.gapTime * 1e-3) * 60);
+            obj.tailFrames = round((obj.tailTime * 1e-3) * 60);
+            obj.stimFrames = round((obj.flashFrames + obj.gapFrames) * obj.imagesPerEpoch);
+
             % Get .mat file name from the directory as a sanity check to
             % make sure the correct file was loaded
             dir_contents = dir(fullfile(obj.imgDir, '*.mat'));
@@ -308,27 +317,6 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
                 distances(i*step-step+1:i*step) = repmat(obj.movementScale(i), 1, obj.imagesPerEpoch/length(obj.movementScale));
             end
 
-            % Assign movement trajectories to all stimuli based on whether
-            % the E is oriented vertically or horizontally. If the E is
-            % oriented vertically (pointing up or down) there is only one
-            % left-right movement trajectory since they are redundant, but
-            % there are separate up and down trajectories since they are
-            % different. If the E is oriented horizontally (pointing left
-            % or right) there is only one up-down movement trajectory but
-            % separate left and right movement trajectories.
-            % trajectories_idx = 1:4;
-            % trajectories = {[0,10], [10,0], [0,-10], [-10,0]};
-            % 
-            % movement_trajectories = [repmat(trajectories_idx(1), 1, obj.imagesPerEpoch/length(trajectories_idx)),...
-            %                 repmat(trajectories_idx(2), 1, obj.imagesPerEpoch/length(trajectories_idx)),...
-            %                 repmat(trajectories_idx(3), 1, obj.imagesPerEpoch/length(trajectories_idx)),...
-            %                 repmat(trajectories_idx(4), 1, obj.imagesPerEpoch/length(trajectories_idx))];
-            % movement_trajectories = num2cell(movement_trajectories);
-            % 
-            % for i = 1:obj.imagesPerEpoch
-            %     movement_trajectories{i} = floor(trajectories{movement_trajectories{i}}*distances(i));
-            % end
-
             trajectories_idx = 1:4;
             trajectories = {[0,10], [10,0], [0,-10], [-10,0]};
             
@@ -369,7 +357,12 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             epoch.addParameter('imageOrientation', imageOrder);
             epoch.addParameter('imageMovement', obj.movementMatrix);
             epoch.addParameter('magnificationFactor', obj.magnificationFactor);
-            epoch.addParameter('randomizedOrder', randomizedOrder)
+            epoch.addParameter('randomizedOrder', randomizedOrder);
+            epoch.addParameter('preFrames', obj.preFrames);
+            epoch.addParameter('flashFrames', obj.flashFrames);
+            epoch.addParameter('gapFrames', obj.gapFrames);
+            epoch.addParameter('tailFrames', obj.tailFrames);
+            epoch.addParameter('stimFrames', obj.stimFrames);
         end
         
         % Define images per epoch using number of orientations, number of
@@ -380,29 +373,29 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
         
         % Define stim time as images per epoch * (flash time + gap time)
         function stimTime = get.stimTime(obj)
-            stimTime = ceil(obj.stimFrames / 60 * 1e3);
+            stimTime = ceil((obj.flashTime + obj.gapTime)* obj.imagesPerEpoch);
         end
 
-        % Get frame counts
-        function preFrames = get.preFrames(obj)
-            preFrames = floor((obj.preTime*1e-3)*60);
-        end
-
-        function flashFrames = get.flashFrames(obj)
-            flashFrames = floor((obj.flashTime*1e-3)*60);
-        end
-
-        function gapFrames = get.gapFrames(obj)
-            gapFrames = floor((obj.gapTime*1e-3)*60);
-        end
-
-        function stimFrames = get.stimFrames(obj)
-            stimFrames = (obj.gapFrames + obj.flashFrames) * obj.imagesPerEpoch;
-        end
-
-        function tailFrames = get.tailFrames(obj)
-            tailFrames = floor((obj.tailTime*1e-3)*60);
-        end
+        % % Get frame counts
+        % function preFrames = get.preFrames(obj)
+        %     preFrames = floor((obj.preTime*1e-3)*60);
+        % end
+        % 
+        % function flashFrames = get.flashFrames(obj)
+        %     flashFrames = floor((obj.flashTime*1e-3)*60);
+        % end
+        % 
+        % function gapFrames = get.gapFrames(obj)
+        %     gapFrames = floor((obj.gapTime*1e-3)*60);
+        % end
+        % 
+        % function stimFrames = get.stimFrames(obj)
+        %     stimFrames = (obj.gapFrames + obj.flashFrames) * obj.imagesPerEpoch;
+        % end
+        % 
+        % function tailFrames = get.tailFrames(obj)
+        %     tailFrames = floor((obj.tailTime*1e-3)*60);
+        % end
 
 
         function a = get.amp2(obj)

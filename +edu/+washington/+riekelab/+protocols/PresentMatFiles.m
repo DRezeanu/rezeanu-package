@@ -28,11 +28,11 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
 
     properties (Dependent)
         stimTime                      % Total stimulus duration per epoch
-        preFrames
-        flashFrames
-        gapFrames
-        stimFrames
-        tailFrames
+        % preFrames
+        % flashFrames
+        % gapFrames
+        % stimFrames
+        % tailFrames
     end
 
     properties (Dependent, SetAccess = private)
@@ -47,6 +47,11 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
         image_dir
         magnificationFactor
         backgroundImage
+        preFrames
+        flashFrames
+        gapFrames
+        stimFrames
+        tailFrames
     end
 
     methods
@@ -71,6 +76,12 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             catch
                 obj.image_dir = 'C:\Users\Public\Documents\GitRepos\Symphony2\flashed_images\';
             end
+
+            obj.preFrames = round((obj.preTime * 1e-3) * 60);
+            obj.flashFrames = round((obj.flashTime * 1e-3) * 60);
+            obj.gapFrames = round((obj.gapTime * 1e-3) * 60);
+            obj.tailFrames = round((obj.tailTime * 1e-3) * 60);
+            obj.stimFrames = round((obj.flashFrames + obj.gapFrames) * obj.imagesPerEpoch);
 
             % Get list of .mat files in the directory
             matFile_dir = fullfile(obj.image_dir, obj.fileFolder); 
@@ -184,29 +195,29 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
         end
 
         function stimTime = get.stimTime(obj)
-            stimTime = ceil(obj.stimFrames / 60 * 1e3);
+            stimTime = ceil((obj.flashTime + obj.gapTime)* obj.imagesPerEpoch);
         end
 
-        % Get frame counts
-        function preFrames = get.preFrames(obj)
-            preFrames = floor((obj.preTime*1e-3)*60);
-        end
-        
-        function flashFrames = get.flashFrames(obj)
-            flashFrames = floor((obj.flashTime*1e-3)*60);
-        end
-
-        function gapFrames = get.gapFrames(obj)
-            gapFrames = floor((obj.gapTime*1e-3)*60);
-        end
-
-        function stimFrames = get.stimFrames(obj)
-            stimFrames = (obj.gapFrames + obj.flashFrames) * obj.imagesPerEpoch;
-        end
-
-        function tailFrames = get.tailFrames(obj)
-            tailFrames = floor((obj.tailTime*1e-3)*60);
-        end
+        % % Get frame counts
+        % function preFrames = get.preFrames(obj)
+        %     preFrames = floor((obj.preTime*1e-3)*60);
+        % end
+        % 
+        % function flashFrames = get.flashFrames(obj)
+        %     flashFrames = floor((obj.flashTime*1e-3)*60);
+        % end
+        % 
+        % function gapFrames = get.gapFrames(obj)
+        %     gapFrames = floor((obj.gapTime*1e-3)*60);
+        % end
+        % 
+        % function stimFrames = get.stimFrames(obj)
+        %     stimFrames = (obj.gapFrames + obj.flashFrames) * obj.imagesPerEpoch;
+        % end
+        % 
+        % function tailFrames = get.tailFrames(obj)
+        %     tailFrames = floor((obj.tailTime*1e-3)*60);
+        % end
 
         function a = get.amp2(obj)
             amps = obj.rig.getDeviceNames('Amp');
