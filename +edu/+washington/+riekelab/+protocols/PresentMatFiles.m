@@ -28,11 +28,6 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
 
     properties (Dependent)
         stimTime                      % Total stimulus duration per epoch
-        % preFrames
-        % flashFrames
-        % gapFrames
-        % stimFrames
-        % tailFrames
     end
 
     properties (Dependent, SetAccess = private)
@@ -191,33 +186,16 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             epoch.addParameter('matFile', obj.matFiles{current_index});
             epoch.addParameter('imageOrder', obj.defocusStates(randomizedOrder));
             epoch.addParameter('magnificationFactor', obj.magnificationFactor);
-        
+            epoch.addParameter('preFrames', obj.preFrames);
+            epoch.addParameter('flashFrames', obj.flashFrames);
+            epoch.addParameter('gapFrames', obj.gapFrames);
+            epoch.addParameter('tailFrames', obj.tailFrames);
+            epoch.addParameter('stimFrames', obj.stimFrames);
         end
 
         function stimTime = get.stimTime(obj)
             stimTime = ceil((obj.flashTime + obj.gapTime)* obj.imagesPerEpoch);
         end
-
-        % % Get frame counts
-        % function preFrames = get.preFrames(obj)
-        %     preFrames = floor((obj.preTime*1e-3)*60);
-        % end
-        % 
-        % function flashFrames = get.flashFrames(obj)
-        %     flashFrames = floor((obj.flashTime*1e-3)*60);
-        % end
-        % 
-        % function gapFrames = get.gapFrames(obj)
-        %     gapFrames = floor((obj.gapTime*1e-3)*60);
-        % end
-        % 
-        % function stimFrames = get.stimFrames(obj)
-        %     stimFrames = (obj.gapFrames + obj.flashFrames) * obj.imagesPerEpoch;
-        % end
-        % 
-        % function tailFrames = get.tailFrames(obj)
-        %     tailFrames = floor((obj.tailTime*1e-3)*60);
-        % end
 
         function a = get.amp2(obj)
             amps = obj.rig.getDeviceNames('Amp');

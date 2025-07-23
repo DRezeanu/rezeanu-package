@@ -19,11 +19,6 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
     properties (Dependent)
         imagesPerEpoch
         stimTime                        % Total stim time for the full epoch
-        % preFrames
-        % flashFrames
-        % gapFrames
-        % stimFrames
-        % tailFrames
     end
 
     properties (Dependent, SetAccess = private)
@@ -375,28 +370,6 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
         function stimTime = get.stimTime(obj)
             stimTime = ceil((obj.flashTime + obj.gapTime)* obj.imagesPerEpoch);
         end
-
-        % % Get frame counts
-        % function preFrames = get.preFrames(obj)
-        %     preFrames = floor((obj.preTime*1e-3)*60);
-        % end
-        % 
-        % function flashFrames = get.flashFrames(obj)
-        %     flashFrames = floor((obj.flashTime*1e-3)*60);
-        % end
-        % 
-        % function gapFrames = get.gapFrames(obj)
-        %     gapFrames = floor((obj.gapTime*1e-3)*60);
-        % end
-        % 
-        % function stimFrames = get.stimFrames(obj)
-        %     stimFrames = (obj.gapFrames + obj.flashFrames) * obj.imagesPerEpoch;
-        % end
-        % 
-        % function tailFrames = get.tailFrames(obj)
-        %     tailFrames = floor((obj.tailTime*1e-3)*60);
-        % end
-
 
         function a = get.amp2(obj)
             amps = obj.rig.getDeviceNames('Amp');
