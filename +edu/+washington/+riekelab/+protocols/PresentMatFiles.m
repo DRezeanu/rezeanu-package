@@ -126,7 +126,7 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
                 if img_index < 1 || img_index > obj.imagesPerEpoch
                     img = obj.backgroundImage;
                 elseif (frame >= (obj.flashFrames+obj.gapFrames)*(img_index-1)) && (frame < ((obj.flashFrames+obj.gapFrames)*(img_index-1)+obj.flashFrames))
-                    disp([num2str(frame), num2str(img_index)])
+                    disp([num2str(frame), ' | ', num2str(img_index)])
                     img = obj.imageMatrix{img_index};
                 else
                     img = obj.backgroundImage;
