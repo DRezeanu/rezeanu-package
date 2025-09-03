@@ -56,11 +56,16 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             [obj.amp, obj.ampType] = obj.createDeviceNamesProperty('Amp');
         end
         
-        function prepareRun_regen(obj, canvas, image_dir)
-           obj.canvasSize = canvas.size;
-           obj.image_dir = image_dir;
+        function prepareRun_regen(obj, canvas, run_params)
+            if nargin < 3
+                run_params.image_dir = fullfile('/', 'Users', 'drezeanu',...
+                    'UW', 'Matlab', 'Defocus Stim Generation', 'src', 'imageOutput');
+            end
+            
+            obj.canvasSize = canvas.size;
+            obj.image_dir = run_params.image_dir;
            
-           obj.preFrames = round((obj.preTime * 1e-3) * 60);
+            obj.preFrames = round((obj.preTime * 1e-3) * 60);
             obj.flashFrames = round((obj.flashTime * 1e-3) * 60);
             obj.gapFrames = round((obj.gapTime * 1e-3) * 60);
             obj.tailFrames = round((obj.tailTime * 1e-3) * 60);
@@ -112,11 +117,10 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             end
         end
 
-        function prepareEpoch_regen(obj, epoch_index, imageOrder)
-            current_index = epoch_index;
+        function prepareEpoch_regen(obj, epoch_params)
             
             % Load next .mat file
-            matFilePath = fullfile(obj.image_dir, obj.fileFolder, obj.matFiles{current_index});
+            matFilePath = fullfile(obj.image_dir, obj.fileFolder, epoch_params.matFile);
             data = load(matFilePath);
             fields = fieldnames(data);
             matData = data.(fields{1}); % Extract the stored matrix (912 x 1141 x 15)
@@ -128,7 +132,7 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             end
             
             % Randomize the same as they were in the saved epoch params
-            images = images(imageOrder);
+            images = images(epoch_params.imageOrder);
             
             obj.imageMatrix = images; % Store image 
             
@@ -192,6 +196,7 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             % Log metadata correctly
             epoch.addParameter('matFile', obj.matFiles{current_index});
             epoch.addParameter('imageOrder', obj.defocusStates(randomizedOrder));
+            epoch.addParameter('randomizedOrder', randomizedOrder);
             epoch.addParameter('magnificationFactor', obj.magnificationFactor);
             epoch.addParameter('preFrames', obj.preFrames);
             epoch.addParameter('flashFrames', obj.flashFrames);
