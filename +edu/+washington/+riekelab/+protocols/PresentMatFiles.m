@@ -55,9 +55,31 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             didSetRig@edu.washington.riekelab.protocols.RiekeLabStageProtocol(obj);
             [obj.amp, obj.ampType] = obj.createDeviceNamesProperty('Amp');
         end
+        
+        function prepareRun_regen(obj, canvas, image_dir)
+           obj.canvasSize = canvas.size;
+           obj.image_dir = image_dir;
+           
+           obj.preFrames = round((obj.preTime * 1e-3) * 60);
+            obj.flashFrames = round((obj.flashTime * 1e-3) * 60);
+            obj.gapFrames = round((obj.gapTime * 1e-3) * 60);
+            obj.tailFrames = round((obj.tailTime * 1e-3) * 60);
+            obj.stimFrames = round((obj.flashFrames + obj.gapFrames) * obj.imagesPerEpoch);
+
+            % Get list of .mat files in the directory
+            matFile_dir = fullfile(obj.image_dir, obj.fileFolder); 
+            dir_contents = dir(fullfile(matFile_dir, '*.mat'));
+            obj.matFiles = {dir_contents.name}; % Store file names
+            
+            if isempty(obj.matFiles)
+                error('No .mat files found in the specified directory: %s', matFile_dir);
+            else
+                fprintf('Loaded %d .mat files from %s.\n', length(obj.matFiles), matFile_dir);
+            end
+        end
 
         function prepareRun(obj)
-            prepareRun@manookinlab.protocols.ManookinLabStageProtocol(obj);
+             prepareRun@manookinlab.protocols.ManookinLabStageProtocol(obj);
             
             if ~obj.isMeaRig
                 obj.showFigure('symphonyui.builtin.figures.ResponseFigure', obj.rig.getDevice(obj.amp));
@@ -84,55 +106,40 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             obj.matFiles = {dir_contents.name}; % Store file names
             
             if isempty(obj.matFiles)
-                error('No .mat files found in the specified directory: %s', obj.fileFolder);
-            end
-            
-            fprintf('Loaded %d .mat files from %s.\n', length(obj.matFiles), obj.fileFolder);
-        end
-
-        function p = createPresentation(obj)
-            % Stage presentation setup
-            canvasSize = obj.rig.getDevice('Stage').getCanvasSize();
-            totalTimePerEpoch = ceil((obj.preFrames + obj.stimFrames + obj.tailFrames)/60);
-            p = stage.core.Presentation(totalTimePerEpoch);
-            
-            p.setBackgroundColor(obj.backgroundIntensity); % Set background intensity 
-            
-            % Prep to display image
-            scene = stage.builtin.stimuli.Image(obj.imageMatrix{1});
-            scene.size = [size(obj.imageMatrix{1},2),size(obj.imageMatrix{1},1)]*obj.magnificationFactor; % Retain aspect ratio.
-            scene.position = canvasSize / 2;
-
-            % Use linear interpolation for scaling
-            scene.setMinFunction(GL.LINEAR);
-            scene.setMagFunction(GL.LINEAR);
-            
-            % Only display images at appropriate times
-            p.addStimulus(scene);
-            sceneVisible = stage.builtin.controllers.PropertyController(scene, 'visible', ...
-                @(state)state.frame >= obj.preFrames && state.frame < obj.preFrames + obj.stimFrames);
-            p.addController(sceneVisible);
-            
-
-            % Cycle through the 5 images within the .mat file
-            imgValue = stage.builtin.controllers.PropertyController(scene, ...
-                'imageMatrix', @(state)setImage(obj, state.frame - obj.preFrames));
-            
-            % Add the controller.
-            p.addController(imgValue);
-
-            function img = setImage(obj, frame)
-                img_index = floor(frame / (obj.flashFrames + obj.gapFrames)) + 1;
-                if img_index < 1 || img_index > obj.imagesPerEpoch
-                    img = obj.backgroundImage;
-                elseif (frame >= (obj.flashFrames+obj.gapFrames)*(img_index-1)) && (frame < ((obj.flashFrames+obj.gapFrames)*(img_index-1)+obj.flashFrames))
-                    img = obj.imageMatrix{img_index};
-                else
-                    img = obj.backgroundImage;
-                end
+                error('No .mat files found in the specified directory: %s', matFile_dir);
+            else
+                fprintf('Loaded %d .mat files from %s.\n', length(obj.matFiles), matFile_dir);
             end
         end
 
+        function prepareEpoch_regen(obj, epoch_index, imageOrder)
+            current_index = epoch_index;
+            
+            % Load next .mat file
+            matFilePath = fullfile(obj.image_dir, obj.fileFolder, obj.matFiles{current_index});
+            data = load(matFilePath);
+            fields = fieldnames(data);
+            matData = data.(fields{1}); % Extract the stored matrix (912 x 1141 x 15)
+            
+            % Extract 5 RGB images
+            images = cell(1,5);
+            for i = 1:5
+                images{i} = matData(:,:, (3*i-2):(3*i)); % Extract RGB slices
+            end
+            
+            % Randomize the same as they were in the saved epoch params
+            images = images(imageOrder);
+            
+            obj.imageMatrix = images; % Store image 
+            
+            % Get the magnification factor to retain aspect ratio.
+            obj.magnificationFactor = ceil( max(obj.canvasSize(2)/size(obj.imageMatrix{1},1),obj.canvasSize(1)/size(obj.imageMatrix{1},2)) );
+            
+            % Create the background image.
+            obj.backgroundImage = ones(size(images{1}))*obj.backgroundIntensity;
+            obj.backgroundImage = uint8(obj.backgroundImage*255);
+        end
+        
         function prepareEpoch(obj, epoch)
             prepareEpoch@manookinlab.protocols.ManookinLabStageProtocol(obj, epoch);
             
@@ -191,6 +198,48 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             epoch.addParameter('gapFrames', obj.gapFrames);
             epoch.addParameter('tailFrames', obj.tailFrames);
             epoch.addParameter('stimFrames', obj.stimFrames);
+        end
+        
+        function p = createPresentation(obj)
+            % Stage presentation setup
+            totalTimePerEpoch = ceil((obj.preFrames + obj.stimFrames + obj.tailFrames)/60);
+            p = stage.core.Presentation(totalTimePerEpoch);
+            
+            p.setBackgroundColor(obj.backgroundIntensity); % Set background intensity 
+            
+            % Prep to display image
+            scene = stage.builtin.stimuli.Image(obj.imageMatrix{1});
+            scene.size = [size(obj.imageMatrix{1},2),size(obj.imageMatrix{1},1)]*obj.magnificationFactor; % Retain aspect ratio.
+            scene.position = obj.canvasSize / 2;
+
+            % Use linear interpolation for scaling
+            scene.setMinFunction(GL.LINEAR);
+            scene.setMagFunction(GL.LINEAR);
+            
+            % Only display images at appropriate times
+            p.addStimulus(scene);
+            sceneVisible = stage.builtin.controllers.PropertyController(scene, 'visible', ...
+                @(state)state.frame >= obj.preFrames && state.frame < obj.preFrames + obj.stimFrames);
+            p.addController(sceneVisible);
+            
+
+            % Cycle through the 5 images within the .mat file
+            imgValue = stage.builtin.controllers.PropertyController(scene, ...
+                'imageMatrix', @(state)setImage(obj, state.frame - obj.preFrames));
+            
+            % Add the controller.
+            p.addController(imgValue);
+
+            function img = setImage(obj, frame)
+                img_index = floor(frame / (obj.flashFrames + obj.gapFrames)) + 1;
+                if img_index < 1 || img_index > obj.imagesPerEpoch
+                    img = obj.backgroundImage;
+                elseif (frame >= (obj.flashFrames+obj.gapFrames)*(img_index-1)) && (frame < ((obj.flashFrames+obj.gapFrames)*(img_index-1)+obj.flashFrames))
+                    img = obj.imageMatrix{img_index};
+                else
+                    img = obj.backgroundImage;
+                end
+            end
         end
 
         function stimTime = get.stimTime(obj)
