@@ -133,7 +133,7 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             obj.imageMatrix = images; % Store image 
             
             % Get the magnification factor to retain aspect ratio.
-            obj.magnificationFactor = ceil( max(obj.canvasSize(2)/size(obj.imageMatrix{1},1),obj.canvasSize(1)/size(obj.imageMatrix{1},2)) );
+            obj.magnificationFactor = max(obj.canvasSize(2)/size(obj.imageMatrix{1},1),obj.canvasSize(1)/size(obj.imageMatrix{1},2));
             
             % Create the background image.
             obj.backgroundImage = ones(size(images{1}))*obj.backgroundIntensity;
@@ -183,7 +183,7 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             obj.imageMatrix = images; % Store image
             
             % Get the magnification factor to retain aspect ratio.
-            obj.magnificationFactor = ceil( max(obj.canvasSize(2)/size(obj.imageMatrix{1},1),obj.canvasSize(1)/size(obj.imageMatrix{1},2)) );
+            obj.magnificationFactor = max( obj.canvasSize(2)/size(obj.imageMatrix{1},1), obj.canvasSize(1)/size(obj.imageMatrix{1},2) );
             
             % Create the background image.
             obj.backgroundImage = ones(size(images{1}))*obj.backgroundIntensity;
@@ -209,7 +209,7 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             
             % Prep to display image
             scene = stage.builtin.stimuli.Image(obj.imageMatrix{1});
-            scene.size = [size(obj.imageMatrix{1},2),size(obj.imageMatrix{1},1)]*obj.magnificationFactor; % Retain aspect ratio.
+            scene.size = ceil([size(obj.imageMatrix{1},2),size(obj.imageMatrix{1},1)]*obj.magnificationFactor); % Retain aspect ratio.
             scene.position = obj.canvasSize / 2;
 
             % Use linear interpolation for scaling
