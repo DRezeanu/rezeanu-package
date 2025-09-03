@@ -57,11 +57,6 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
         end
         
         function prepareRun_regen(obj, canvas, run_params)
-            if nargin < 3
-                run_params.image_dir = fullfile('/', 'Users', 'drezeanu',...
-                    'UW', 'Matlab', 'Defocus Stim Generation', 'src', 'imageOutput');
-            end
-            
             obj.canvasSize = canvas.size;
             obj.image_dir = run_params.image_dir;
            
