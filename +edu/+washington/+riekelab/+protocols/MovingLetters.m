@@ -51,6 +51,29 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             [obj.amp, obj.ampType] = obj.createDeviceNamesProperty('Amp');
         end
         
+        function prepareRun_regen(obj, canvas, run_params)
+            obj.canvasSize = canvas.size;
+            obj.imgDir = run_params.image_dir;
+
+            obj.preFrames = round((obj.preTime * 1e-3) * 60);
+            obj.flashFrames = round((obj.flashTime * 1e-3) * 60);
+            obj.gapFrames = round((obj.gapTime * 1e-3) * 60);
+            obj.tailFrames = round((obj.tailTime * 1e-3) * 60);
+            obj.stimFrames = round((obj.flashFrames + obj.gapFrames) * obj.imagesPerEpoch);
+
+            % Get .mat file name from the directory as a sanity check to
+            % make sure the correct file was loaded
+            dir_contents = dir(fullfile(obj.imgDir, '*.mat'));
+            obj.loadedFile = {dir_contents.name}; % Store file names
+            
+            if isempty(obj.loadedFile)
+                error('No .mat files found in image directory %s \n', obj.imgDir);
+            else
+                fprintf('Loaded mat file from image directory %s \n', obj.imgDir);
+            end
+
+        end
+        
         function prepareRun(obj)
             prepareRun@manookinlab.protocols.ManookinLabStageProtocol(obj);
             
@@ -79,10 +102,10 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
             obj.loadedFile = {dir_contents.name}; % Store file names
             
             if isempty(obj.loadedFile)
-                error('No .mat files found in image directory. \n');
+                error('No .mat files found in image directory %s \n', obj.imgDir);
+            else
+                fprintf('Loaded mat file from image directory %s \n', obj.imgDir);
             end
-            
-            fprintf('Loaded mat file from image directory.\n');
 
         end
         
@@ -134,7 +157,7 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
         
         function p = createPresentation(obj)
             % Create a presentation that's the correct length of time
-            canvasSize = obj.rig.getDevice('Stage').getCanvasSize();
+            canvasSize = obj.canvasSize;
             totalTimePerEpoch = ceil((obj.preFrames + obj.stimFrames + obj.tailFrames)/60);
             p = stage.core.Presentation(totalTimePerEpoch);
 
@@ -227,6 +250,104 @@ classdef MovingLetters < manookinlab.protocols.ManookinLabStageProtocol
                     pos = p0;
                 end
             end
+
+        end
+        
+        function prepareEpoch_regen(obj, epoch_params)            
+            % Load mat file
+            matFilePath = fullfile(obj.imgDir, obj.matFile);
+            data = load(matFilePath);
+            fields = fieldnames(data);
+            matData = data.(fields{1});
+            
+            % Create the image matrix, pulling three layers at a time to
+            % generate each RGB image and storing each image into a
+            % separate cell in the images variable
+            images = cell(1,obj.numOrientations);
+            for i = 1:obj.numOrientations
+                images{i} = matData(:,:, (3*i-2):(3*i));
+            end
+
+            % Repeat this set of four images as many times as it takes to
+            % get every combination of E orientation, directions of
+            % movement, and scale of movement (4 orientations * 4
+            % directions * 3 scales of movement = 36 total images per
+            % epoch)
+            images = repmat(images, 1, obj.numDirections * length(obj.movementScale));
+
+            % Randomize if necessary
+            randomizedOrder = epoch_params.randomizedOrder;
+            images = images(randomizedOrder);
+            
+            % Store the images inside the imageMatrix variable
+            obj.imageMatrix = images;
+            
+            % Create a cell array of strings that stores the E orientations
+            % shown in plain english (i.e. 'up', 'down', 'left', and
+            % 'right')
+            imageOrder = cell(1,obj.imagesPerEpoch);
+            
+            % Pull image order as cell array of strings for metadata
+            for i = 1:obj.imagesPerEpoch
+                if randomizedOrder(i) == 1 || mod(randomizedOrder(i),4) == 1
+                    imageOrder{i} = 'up';
+                elseif randomizedOrder(i) == 2 || mod(randomizedOrder(i), 4) == 2
+                    imageOrder{i} = 'left';
+                elseif randomizedOrder(i) == 3 || mod(randomizedOrder(i), 4) == 3
+                    imageOrder{i} = 'down';
+                else
+                    imageOrder{i} = 'right';
+                end
+            end
+            
+            % Arrange all movement distances starting with the shortest
+            % distance first, then the middle distance, then the longest
+            % distance. These don't need to be randomized. They'll be used
+            % to scale the movement trajectories below, and then the
+            % movement trajectories are randomized if the option to
+            % randomizePresentations is checked.
+            % distances = repmat(obj.movementScale, 1, obj.imagesPerEpoch/length(obj.movementScale));
+            distances = zeros(1,obj.imagesPerEpoch);
+            step = obj.imagesPerEpoch/length(obj.movementScale);
+            
+            for i = 1:length(obj.movementScale)
+                distances(i*step-step+1:i*step) = repmat(obj.movementScale(i), 1, obj.imagesPerEpoch/length(obj.movementScale));
+            end
+
+            trajectories_idx = 1:4;
+            trajectories = {[0,10], [10,0], [0,-10], [-10,0]};
+            
+            movement_trajectories = [repmat(trajectories_idx(1), 1, obj.numOrientations),...
+                            repmat(trajectories_idx(2), 1, obj.numOrientations),...
+                            repmat(trajectories_idx(3), 1, obj.numOrientations),...
+                            repmat(trajectories_idx(4), 1, obj.numOrientations)];
+            
+            movement_trajectories = repmat(movement_trajectories, 1, length(obj.movementScale));
+            
+            movement_trajectories = num2cell(movement_trajectories);
+            
+            for i = 1:obj.imagesPerEpoch
+                movement_trajectories{i} = floor(trajectories{movement_trajectories{i}}*distances(i));
+            end
+            
+            % Randomize movement order if randomize presntations is
+            % checked, note that the code above means "randomizedOrder" may
+            % not actually be randomized, so we don't have to include a
+            % second if statement here.
+            movement_trajectories = movement_trajectories(randomizedOrder);
+            
+            % Assign movement trajectories to the movementMatrix property
+            % and then call createTrajectories to use that matrix to create
+            % the x and y trajectories for the entire epoch.
+            obj.movementMatrix = movement_trajectories;
+            obj.createTrajectories()
+
+            % Get the magnification factor to retain aspect ratio.
+            obj.magnificationFactor = max(obj.canvasSize(2)/size(obj.imageMatrix{1},1),obj.canvasSize(1)/size(obj.imageMatrix{1},2));
+
+            % Create background image
+            obj.backgroundImage = ones(size(obj.imageMatrix{1})) * obj.backgroundIntensity;
+            obj.backgroundImage = uint8(obj.backgroundImage*255);
 
         end
         
