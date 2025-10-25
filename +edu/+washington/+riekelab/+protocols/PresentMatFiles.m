@@ -19,7 +19,7 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
         tailTime    = 250                   % Tail time in ms
         imagesPerEpoch = 5                  % Number of images per .mat file
         fileFolder  = 'DefocusImages'       % Folder containing the .mat files
-        backgroundIntensity = 0.45          % 0 - 1 (corresponds to image intensities in folder)
+        backgroundIntensity = 0.5           % Intensity of background gray to use during gap time
         randomize = true;                   % Whether to randomize the order of images in each .mat file
         onlineAnalysis = 'none'             % Type of online analysis
         numberOfAverages = uint16(500)      % Number of epochs to queue (one per .mat file)
