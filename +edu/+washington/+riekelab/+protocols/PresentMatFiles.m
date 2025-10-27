@@ -118,14 +118,19 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             matFilePath = fullfile(obj.image_dir, obj.fileFolder, epoch_params.matFile);
             data = load(matFilePath);
             fields = fieldnames(data);
-            matData = data.(fields{1}); % Extract the stored matrix (912 x 1141 x 15)
-            
-            % Extract 5 RGB images
-            images = cell(1,5);
-            for i = 1:5
-                images{i} = matData(:,:, (3*i-2):(3*i)); % Extract RGB slices
+            matData = data.(fields{1});
+            if iscell(matData)
+                images = matData;
+            else  
+                % Extract 5 RGB images
+                images = cell(1,size(matData, 3)/3);
+                for i = 1:5
+                    images{i} = matData(:,:, (3*i-2):(3*i)); % Extract RGB slices
+                end
             end
-            
+
+            assert(length(images)==length(obj.defocusStates), 'Error: More Images that Defocus States');
+                
             % Randomize the same as they were in the saved epoch params
             images = images(epoch_params.imageOrder);
             
@@ -161,13 +166,19 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             matFilePath = fullfile(obj.image_dir, obj.fileFolder, obj.matFiles{current_index});
             data = load(matFilePath);
             fields = fieldnames(data);
-            matData = data.(fields{1}); % Extract the stored matrix (912 x 1141 x 15)
-            
-            % Extract 5 RGB images
-            images = cell(1,5);
-            for i = 1:5
-                images{i} = matData(:,:, (3*i-2):(3*i)); % Extract RGB slices
+            matData = data.(fields{1});
+            if iscell(matData)
+                images = matData;
+            else  
+                % Extract 5 RGB images
+                images = cell(1,size(matData,3)/3);
+                for i = 1:5
+                    images{i} = matData(:,:, (3*i-2):(3*i)); % Extract RGB slices
+                end
             end
+
+            assert(length(images)==length(obj.defocusStates), 'Error: More Images that Defocus States');
+
                         
             % Generate original order indices
             imageIndices = 1:obj.imagesPerEpoch; 
