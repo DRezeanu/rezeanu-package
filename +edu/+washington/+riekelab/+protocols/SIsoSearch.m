@@ -94,13 +94,16 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
             % Create red, green and blue weight vectors
             numPoints = obj.RGGridPoints(1)*obj.RGGridPoints(2);
 
-            % Use Calibration Resources to Get the Expected Quantal Catch
-            % of the Cones
+            % Calculate expected color weights (based on latest
+            % calibrations as of 10/29/25... will replace this with
+            % something more robust)
 
-            qCatch = [35262, 191230, 8866;
-                      12305, 160385, 8323;
-                      3560, 7512, 66757];
-            obj.computedColorWeights = qCatch' \ [0 0 1]';
+                       %R      %G     %B
+            qCatch = [35262, 191230, 8866; %L
+                      12305, 160385, 8323; %M
+                      3560, 7512, 66757];  %S
+            
+            obj.computedColorWeights = qCatch \ [0 0 1]';
             obj.computedColorWeights = obj.computedColorWeights/max(abs(obj.computedColorWeights));
 
             fprintf('\nExpected S-iso weights are: %s \n', num2str(obj.computedColorWeights));
