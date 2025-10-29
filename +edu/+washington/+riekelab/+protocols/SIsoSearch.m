@@ -98,14 +98,11 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
 
             stageRes = obj.rig.getDevice('Stage').getResourceNames();
             disp(stageRes)
-            disp(obj.rig.getDevice('Stage').getResource('fluxFactorPaths'))
+            fluxFactorPaths = obj.rig.getDevice('Stage').getResource('fluxFactorPaths');
+            spectrum = obj.rig.getDevice('Stage').getResource('spectrum');
 
-            if isempty(obj.epochGroup)
-                disp('Create Epoch Group to See Source Resource Names')
-            else
-                source = obj.epochGroup.source;
-                disp(source.getResourceNames())
-            end
+            display(values(fluxFactorPaths));
+            display(values(spectrum));
 
             obj.chromaticClass = 'S-iso';
             obj.setColorWeights();
