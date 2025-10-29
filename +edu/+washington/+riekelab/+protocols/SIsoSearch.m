@@ -99,12 +99,12 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
             fprintf('\nExpected S-iso weights are: %s \n', num2str(obj.colorWeights));
             
             range = obj.RGGridPoints.*obj.RGStepSize;
-            redStart = obj.colorWeights(1)-range(1);
-            redEnd = obj.colorWeights(1)+range(2);
+            redStart = obj.colorWeights(1)-range(1)/2;
+            redEnd = obj.colorWeights(1)+range(1)/2;
             obj.redWeights = linspace(redStart, redEnd, obj.RGGridPoints(1));
             obj.redWeights = repmat(obj.redWeights, [1, obj.RGGridPoints(2)]);
 
-            greenStart = obj.colorWeights(2)-range(1)/2;
+            greenStart = obj.colorWeights(2)-range(2)/2;
             greenEnd = obj.colorWeights(2)+range(2)/2;
             obj.greenWeights = linspace(greenStart, greenEnd, obj.RGGridPoints(2));
             obj.greenWeights = repelem(obj.greenWeights, obj.RGGridPoints(1));
