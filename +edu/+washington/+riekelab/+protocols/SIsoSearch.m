@@ -52,7 +52,6 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
         greenWeights
         blueWeights
         chromaticClass
-        colorWeights
         colorOrder
     end
     
