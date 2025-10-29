@@ -101,8 +101,18 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
             fluxFactorPaths = obj.rig.getDevice('Stage').getResource('fluxFactorPaths');
             spectrum = obj.rig.getDevice('Stage').getResource('spectrum');
 
-            display(values(fluxFactorPaths));
-            display(values(spectrum));
+            flux_paths = values(fluxFactorPaths);
+            disp(flux_paths{1})
+            spectra = values(spectrum);
+            red = spectra{1};
+            green = spectra{2};
+            blue = spectra{3};
+            figure(20);
+            plot(red(:,1), red(:,2), '-r')
+            hold on
+            plot(green(:,1), green(:, 2), '-g')
+            plot(blue(:, 1), blue(:, 2), '-b')
+            hold off
 
             obj.chromaticClass = 'S-iso';
             obj.setColorWeights();
