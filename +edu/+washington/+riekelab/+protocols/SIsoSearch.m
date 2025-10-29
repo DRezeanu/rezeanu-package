@@ -102,12 +102,12 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
             redStart = obj.colorWeights(1)-range(1);
             redEnd = obj.colorWeights(1)+range(2);
             obj.redWeights = linspace(redStart, redEnd, obj.RGGridPoints(1));
-            obj.redWeights = repmat(obj.redWeights, [1, obj.repeats]);
+            obj.redWeights = repmat(obj.redWeights, [1, obj.RGGridPoints(2)]);
 
-            greenStart = obj.colorWeights(2)-range(1);
-            greenEnd = obj.colorWeights(2)+range(2);
+            greenStart = obj.colorWeights(2)-range(1)/2;
+            greenEnd = obj.colorWeights(2)+range(2)/2;
             obj.greenWeights = linspace(greenStart, greenEnd, obj.RGGridPoints(2));
-            obj.greenWeights = repelem(obj.greenWeights, 4);
+            obj.greenWeights = repelem(obj.greenWeights, obj.RGGridPoints(1));
 
             obj.blueWeights = ones([1, numPoints]);
 
