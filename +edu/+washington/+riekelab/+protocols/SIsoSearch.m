@@ -97,7 +97,7 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
             % of the Cones
 
             stageRes = obj.rig.getDevice('Stage').getResourceNames();
-            disp(stageRes)
+            disp(stageRes.getResource('fluxFactorPaths'))
 
             if isempty(obj.epochGroup)
                 disp('Create Epoch Group to See Source Resource Names')
