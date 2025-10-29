@@ -298,7 +298,7 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
         end
          
         function numberOfAverages = get.numberOfAverages(obj)
-            numberOfAverages = uint16(obj.repeats * obj.RGGridPoints(1)*objRGGridPoints(2));
+            numberOfAverages = uint16(obj.repeats * obj.RGGridPoints(1)*obj.RGGridPoints(2));
         end
         
         function stimTime = get.stimTime(obj)
