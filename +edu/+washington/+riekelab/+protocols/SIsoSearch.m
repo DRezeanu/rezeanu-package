@@ -93,6 +93,12 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
             % Create red, green and blue weight vectors
             numPoints = obj.RGGridPoints(1)*obj.RGGridPoints(2);
 
+            % Use Calibration Resources to Get the Expected Quantal Catch
+            % of the Cones
+
+            stageRes = obj.rig.getDevice('Stage').getResourceNames();
+            disp(stageRes)
+
             obj.chromaticClass = 'S-iso';
             obj.setColorWeights();
 
@@ -102,21 +108,14 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
             redStart = obj.colorWeights(1)-range(1)/2;
             redEnd = obj.colorWeights(1)+range(1)/2;
             obj.redWeights = linspace(redStart, redEnd, obj.RGGridPoints(1));
-            obj.redWeights = repmat(obj.redWeights, [1, obj.RGGridPoints(2)]);
+            obj.redWeights = repelem(obj.redWeights, obj.RGGridPoints(2));
 
             greenStart = obj.colorWeights(2)-range(2)/2;
             greenEnd = obj.colorWeights(2)+range(2)/2;
             obj.greenWeights = linspace(greenStart, greenEnd, obj.RGGridPoints(2));
-            obj.greenWeights = repelem(obj.greenWeights, obj.RGGridPoints(1));
+            obj.greenWeights = repmat(obj.greenWeights, [1, obj.RGGridPoints(1)]);
 
             obj.blueWeights = ones([1, numPoints]);
-
-            disp('Red Weights:')
-            disp(obj.redWeights);
-            disp('Green Weights:')
-            disp(obj.greenWeights)
-            disp('Blue Weights:')
-            disp(obj.blueWeights)
 
             fprintf('There are %d red weights \n', length(obj.redWeights));
             fprintf('There are %d green weights \n', length(obj.greenWeights));
