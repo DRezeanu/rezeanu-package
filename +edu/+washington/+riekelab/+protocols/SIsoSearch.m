@@ -53,6 +53,7 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
         blueWeights
         chromaticClass
         colorOrder
+        computedColorWeights
     end
     
     properties (Dependent) 
@@ -96,37 +97,22 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
             % Use Calibration Resources to Get the Expected Quantal Catch
             % of the Cones
 
-            stageRes = obj.rig.getDevice('Stage').getResourceNames();
-            disp(stageRes)
-            fluxFactorPaths = obj.rig.getDevice('Stage').getResource('fluxFactorPaths');
-            spectrum = obj.rig.getDevice('Stage').getResource('spectrum');
+            qCatch = [35262, 191230, 8866;
+                      12305, 160385, 8323;
+                      3560, 7512, 66757];
+            obj.computedColorWeights = qCatch' \ [0 0 1]';
+            obj.computedColorWeights = obj.computedColorWeights/max(abs(obj.computedColorWeights));
 
-            flux_paths = values(fluxFactorPaths);
-            disp(flux_paths{1})
-            spectra = values(spectrum);
-            red = spectra{1};
-            green = spectra{2};
-            blue = spectra{3};
-            figure(20);
-            plot(red(:,1), red(:,2), '-r')
-            hold on
-            plot(green(:,1), green(:, 2), '-g')
-            plot(blue(:, 1), blue(:, 2), '-b')
-            hold off
-
-            obj.chromaticClass = 'S-iso';
-            obj.setColorWeights();
-
-            fprintf('\nExpected S-iso weights are: %s \n', num2str(obj.colorWeights));
+            fprintf('\nExpected S-iso weights are: %s \n', num2str(obj.computedColorWeights));
             
             range = obj.RGGridPoints.*obj.RGStepSize;
-            redStart = obj.colorWeights(1)-range(1)/2;
-            redEnd = obj.colorWeights(1)+range(1)/2;
+            redStart = obj.computedColorWeights(1)-range(1)/2;
+            redEnd = obj.computedColorWeights(1)+range(1)/2;
             obj.redWeights = linspace(redStart, redEnd, obj.RGGridPoints(1));
             obj.redWeights = repelem(obj.redWeights, obj.RGGridPoints(2));
 
-            greenStart = obj.colorWeights(2)-range(2)/2;
-            greenEnd = obj.colorWeights(2)+range(2)/2;
+            greenStart = obj.computedColorWeights(2)-range(2)/2;
+            greenEnd = obj.computedColorWeights(2)+range(2)/2;
             obj.greenWeights = linspace(greenStart, greenEnd, obj.RGGridPoints(2));
             obj.greenWeights = repmat(obj.greenWeights, [1, obj.RGGridPoints(1)]);
 
