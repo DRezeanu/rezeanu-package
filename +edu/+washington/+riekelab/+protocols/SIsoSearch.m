@@ -96,9 +96,9 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
             obj.chromaticClass = 'S-iso';
             obj.setColorWeights();
 
-            fprintf('Expected S-iso weights are: %s \n', num2str(obj.colorWeights));
+            fprintf('\nExpected S-iso weights are: %s \n', num2str(obj.colorWeights));
             
-            range = obj.RGGridPoints*obj.RGStepSize;
+            range = obj.RGGridPoints.*obj.RGStepSize;
             redStart = obj.colorWeights(1)-range(1);
             redEnd = obj.colorWeights(1)+range(2);
             obj.redWeights = linspace(redStart, redEnd, obj.RGGridPoints(1));
