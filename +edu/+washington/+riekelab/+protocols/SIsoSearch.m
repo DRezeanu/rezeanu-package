@@ -19,6 +19,7 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
         temporalClass = 'drifting'      % Temporal type (drifting or reversing)      
         onlineAnalysis = 'none'         % Type of online analysis
         repeats = 4                     % Number of times to repeat full grid
+
     end
     
     properties (Hidden)
