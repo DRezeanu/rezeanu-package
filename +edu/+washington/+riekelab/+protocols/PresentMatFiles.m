@@ -12,18 +12,18 @@
 
 classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
     properties
-        amp                                 % Output amplifier
-        preTime     = 250                   % Pre time in ms
-        flashTime   = 400                   % Time to flash each image in ms
-        gapTime     = 200                   % Gap between images in ms
-        tailTime    = 250                   % Tail time in ms
-        imagesPerEpoch = 5                  % Number of images per .mat file
-        fileFolder  = 'DefocusImages'       % Folder containing the .mat files
-        backgroundIntensity = 0.5           % Intensity of background gray to use during gap time
-        randomize = true;                   % Whether to randomize the order of images in each .mat file
-        onlineAnalysis = 'none'             % Type of online analysis
-        numberOfAverages = uint16(500)      % Number of epochs to queue (one per .mat file)
-        defocusStates = [-5, -3, 0, 3, 5]   % Diopters of defocus contained in each .mat file image
+        amp                                                 % Output amplifier
+        preTime     = 250                                   % Pre time in ms
+        flashTime   = 400                                   % Time to flash each image in ms
+        gapTime     = 0                                     % Gap between images in ms
+        tailTime    = 250                                   % Tail time in ms
+        imagesPerEpoch = 5                                  % Number of images per .mat file
+        fileFolder  = 'DefocusImages_150um_-10_505nm'       % Folder containing the .mat files
+        backgroundIntensity = 0.5                           % Intensity of background gray to use during gap time
+        randomize = true;                                   % Whether to randomize the order of images in each .mat file
+        onlineAnalysis = 'none'                             % Type of online analysis
+        numberOfAverages = uint16(500)                      % Number of epochs to queue (one per .mat file)
+        defocusStates = [-3, -1, 0, 1, 3]                   % Diopters of defocus contained in each .mat file image
     end
 
     properties (Dependent)
