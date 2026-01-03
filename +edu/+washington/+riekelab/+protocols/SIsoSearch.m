@@ -107,7 +107,7 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
                           3560, 7512, 66757];  %S
             elseif obj.greenLED == 505
                            %R      %G     %B
-                qCatch = [135282, 199609, 14474; %L
+                qCatch = [135282, 199609, 14575; %L
                           47210, 324391, 13682; %M
                           13659, 36759, 109742];  %S
             else
