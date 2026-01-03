@@ -117,6 +117,8 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
             obj.computedColorWeights = qCatch \ [0 0 1]';
             obj.computedColorWeights = obj.computedColorWeights/max(abs(obj.computedColorWeights));
 
+            fprintf('\nComputed color weights are: %5.1f %5.1f %5.1f \n', obj.computedColorWeights);
+
             fprintf('\nExpected S-iso weights are: %s \n', num2str(obj.computedColorWeights));
             
             range = obj.RGGridPoints.*obj.RGStepSize;
