@@ -14,6 +14,7 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
         randomOrder = true              % Random orientation order?
         backgroundIntensity = 0.5       % Background light intensity (0-1)
         apertureRadius = 0              % Aperture radius in microns.
+        greenLED = 505                  % nm of Green LED in use
         apertureClass = 'spot'          % Spot or annulus?       
         spatialClass = 'sinewave'       % Spatial type (sinewave or squarewave)
         temporalClass = 'drifting'      % Temporal type (drifting or reversing)      
@@ -99,11 +100,20 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
             % calibrations as of 10/29/25... will replace this with
             % something more robust)
 
-                       %R      %G     %B
-            qCatch = [35262, 191230, 8866; %L
-                      12305, 160385, 8323; %M
-                      3560, 7512, 66757];  %S
-            
+            if obj.greenLED == 565
+                           %R      %G     %B
+                qCatch = [35262, 191230, 8866; %L
+                          12305, 160385, 8323; %M
+                          3560, 7512, 66757];  %S
+            elseif obj.greenLED == 505
+                           %R      %G     %B
+                qCatch = [135282, 199609, 14474; %L
+                          47210, 324391, 13682; %M
+                          13659, 36759, 109742];  %S
+            else
+                error('LED must be 505 or 565');
+            end
+
             obj.computedColorWeights = qCatch \ [0 0 1]';
             obj.computedColorWeights = obj.computedColorWeights/max(abs(obj.computedColorWeights));
 
