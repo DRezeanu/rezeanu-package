@@ -109,7 +109,7 @@ classdef DefocusMovies < manookinlab.protocols.ManookinLabStageProtocol
             obj.movie_name = obj.moviePaths{mov_name,1};
             
             epoch.addParameter('movieName',obj.moviePaths{mov_name,1});
-            epoch.addParameter('folder',obj.local_movie_directory);
+            epoch.addParameter('folder',obj.movie_directory);
             if obj.randomize
                 epoch.addParameter('seed',obj.seed);
             end
