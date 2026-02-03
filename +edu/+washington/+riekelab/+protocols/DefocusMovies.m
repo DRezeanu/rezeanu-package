@@ -19,7 +19,6 @@ classdef DefocusMovies < manookinlab.protocols.ManookinLabStageProtocol
         onlineAnalysisType = symphonyui.core.PropertyType('char', 'row', {'none', 'extracellular', 'exc', 'inh'}) 
         sequence
         moviePaths
-        imageMatrix
         local_movie_directory
         stage_movie_directory
         totalRuns
@@ -43,7 +42,7 @@ classdef DefocusMovies < manookinlab.protocols.ManookinLabStageProtocol
 
             % Define Movie Dir
             movie_dir = 'C:\Users\Public\Documents\GitRepos\Symphony2\movies\';
-            stage_dir = 'C:\Users\Public\Documents\GitRepos\Symphony2\movies\';
+            stage_dir = 'Y:\movies\';
 
             % General directory
             obj.local_movie_directory = strcat(movie_dir, obj.fileFolder); % General folder
