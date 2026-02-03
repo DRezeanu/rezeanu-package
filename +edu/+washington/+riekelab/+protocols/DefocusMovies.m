@@ -94,7 +94,7 @@ classdef DefocusMovies < manookinlab.protocols.ManookinLabStageProtocol
             scene = stage.builtin.stimuli.Movie(fullfile(obj.stage_movie_directory, obj.movie_name));
             scene.size = [canvasSize(1),canvasSize(2)];
             scene.position = canvasSize/2;
-            scene.setPlaybackSpeed(PlaybackSpeed.NORMAL); % Make sure playback is one frame at a time.
+            scene.setPlaybackSpeed(PlaybackSpeed.FRAME_BY_FRAME); % Make sure playback is one frame at a time.
             
             % Use linear interpolation when scaling the image
             scene.setMinFunction(GL.LINEAR);
