@@ -24,7 +24,6 @@ classdef DefocusMovies < manookinlab.protocols.ManookinLabStageProtocol
         stage_movie_directory
         totalRuns
         movie_name
-        seed
     end
 
     methods
@@ -38,16 +37,21 @@ classdef DefocusMovies < manookinlab.protocols.ManookinLabStageProtocol
 
             prepareRun@manookinlab.protocols.ManookinLabStageProtocol(obj);
 
-            obj.showFigure('symphonyui.builtin.figures.ResponseFigure', obj.rig.getDevice(obj.amp));
+            if ~obj.isMeaRig
+                obj.showFigure('symphonyui.builtin.figures.ResponseFigure', obj.rig.getDevice(obj.amp));
+            end
 
             % Define Movie Dir
-            movie_dir = 'C:\Users\Public\Documents\GitRepos\Symphony2\movies\';
-            stage_dir = 'Y:\movies';
+            movie_dir = 'C:\\Users\\Public\\Documents\\GitRepos\\Symphony2\\movies\\';
+            stage_dir = 'Y:\\movies';
 
             % General directory
             obj.local_movie_directory = strcat(movie_dir, obj.fileFolder); % General folder
             obj.stage_movie_directory = strcat(stage_dir, obj.fileFolder);
             ls_movies = dir(obj.local_movie_directory);
+
+            fprintf('Local dir: %s\n', obj.local_movie_directory);
+            fprintf('Stage dir: %s\n', obj.stage_movie_directory);
             
             obj.moviePaths = cell(size(ls_movies,1),1);
             for i = 1:length(ls_movies)
@@ -57,7 +61,9 @@ classdef DefocusMovies < manookinlab.protocols.ManookinLabStageProtocol
             end
 
             obj.moviePaths = obj.moviePaths(~cellfun(@isempty, obj.moviePaths(:,1)), :);
-            
+ 
+            disp(obj.moviePaths);
+
             num_reps = ceil(double(obj.numberOfAverages)/size(obj.moviePaths,1));
             
             if obj.randomize
@@ -72,8 +78,9 @@ classdef DefocusMovies < manookinlab.protocols.ManookinLabStageProtocol
                 obj.sequence = (1:size(obj.moviePaths,1))' * ones(1,num_reps);
                 obj.sequence = obj.sequence(:);
             end
-            
-        end
+            disp(obj.sequence);
+            disp('End of prepare run');
+        end 
 
         
         function p = createPresentation(obj)
@@ -85,6 +92,8 @@ classdef DefocusMovies < manookinlab.protocols.ManookinLabStageProtocol
             p.setBackgroundColor(obj.backgroundIntensity)   % Set background intensity
             
             % Prep to display movie
+            fprintf('Loading movie from %s', fullfile(obj.stage_movie_directory, obj.movie_name));
+
             scene = stage.builtin.stimuli.Movie(fullfile(obj.stage_movie_directory, obj.movie_name));
             scene.size = [canvasSize(1),canvasSize(2)];
             scene.position = canvasSize/2;
@@ -99,6 +108,8 @@ classdef DefocusMovies < manookinlab.protocols.ManookinLabStageProtocol
             sceneVisible = stage.builtin.controllers.PropertyController(scene, 'visible', ...
                 @(state)state.time >= obj.preTime * 1e-3 && state.time < (obj.preTime + obj.stimTime) * 1e-3);
             p.addController(sceneVisible);
+
+            disp('End of create presentation');
         end
         
         function prepareEpoch(obj, epoch)
@@ -106,12 +117,13 @@ classdef DefocusMovies < manookinlab.protocols.ManookinLabStageProtocol
             
             mov_name = obj.sequence(mod(obj.numEpochsCompleted,length(obj.sequence)) + 1);
             obj.movie_name = obj.moviePaths{mov_name,1};
+
+            fprintf('Movie name %s', obj.movie_name);
             
             epoch.addParameter('movieName',obj.moviePaths{mov_name,1});
             epoch.addParameter('folder',obj.local_movie_directory);
-            if obj.randomize
-                epoch.addParameter('seed',obj.seed);
-            end
+
+            disp('End of prepare Epoch');
         end
 
         function tf = shouldContinuePreparingEpochs(obj)
