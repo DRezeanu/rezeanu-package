@@ -5,7 +5,7 @@ classdef DefocusMovies < manookinlab.protocols.ManookinLabStageProtocol
     properties
         amp                                             % Output amplifier
         preTime     = 250;
-        stimTime    = 10000;                            % Stimulus duration in msec
+        stimTime    = 11000;                            % Stimulus duration in msec
         tailTime    = 250;                              % Trailing duration in msec
         fileFolder = 'DefocusMovies_150um_-10_565nm';   % Folder containing videos
         backgroundIntensity = 0.5;                      % 0 - 1 (corresponds to image intensities in folder)
