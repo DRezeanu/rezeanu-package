@@ -43,7 +43,7 @@ classdef DefocusMovies < manookinlab.protocols.ManookinLabStageProtocol
 
             % Define Movie Dir
             movie_dir = 'C:\Users\Public\Documents\GitRepos\Symphony2\movies\';
-            stage_dir = 'Y:\movies\';
+            stage_dir = 'C:\Users\Public\Documents\GitRepos\Symphony2\movies\';
 
             % General directory
             obj.local_movie_directory = strcat(movie_dir, obj.fileFolder); % General folder
@@ -61,8 +61,6 @@ classdef DefocusMovies < manookinlab.protocols.ManookinLabStageProtocol
             end
 
             obj.moviePaths = obj.moviePaths(~cellfun(@isempty, obj.moviePaths(:,1)), :);
- 
-            disp(obj.moviePaths);
 
             num_reps = ceil(double(obj.numberOfAverages)/size(obj.moviePaths,1));
             
@@ -97,7 +95,7 @@ classdef DefocusMovies < manookinlab.protocols.ManookinLabStageProtocol
             scene = stage.builtin.stimuli.Movie(fullfile(obj.stage_movie_directory, obj.movie_name));
             scene.size = [canvasSize(1),canvasSize(2)];
             scene.position = canvasSize/2;
-            scene.setPlaybackSpeed(PlaybackSpeed.FRAME_BY_FRAME); % Make sure playback is one frame at a time.
+            scene.setPlaybackSpeed(PlaybackSpeed.NORMAL); % Make sure playback is one frame at a time.
             
             % Use linear interpolation when scaling the image
             scene.setMinFunction(GL.LINEAR);
