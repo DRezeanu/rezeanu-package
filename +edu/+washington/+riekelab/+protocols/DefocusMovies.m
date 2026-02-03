@@ -42,8 +42,8 @@ classdef DefocusMovies < manookinlab.protocols.ManookinLabStageProtocol
             end
 
             % Define Movie Dir
-            movie_dir = 'C:\\Users\\Public\\Documents\\GitRepos\\Symphony2\\movies\\';
-            stage_dir = 'Y:\\movies';
+            movie_dir = 'C:\Users\Public\Documents\GitRepos\Symphony2\movies\';
+            stage_dir = 'Y:\movies\';
 
             % General directory
             obj.local_movie_directory = strcat(movie_dir, obj.fileFolder); % General folder
