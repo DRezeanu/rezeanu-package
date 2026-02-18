@@ -7,7 +7,7 @@ classdef DefocusMovies < manookinlab.protocols.ManookinLabStageProtocol
         preTime     = 250;
         stimTime    = 11000;                            % Stimulus duration in msec
         tailTime    = 250;                              % Trailing duration in msec
-        fileFolder = 'DefocusMovies_150um_-10_565nm';   % Folder containing videos
+        fileFolder = 'DefocusMovies_150um_-10_565nm_02Hz_20260217';   % Folder containing videos
         backgroundIntensity = 0.5;                      % 0 - 1 (corresponds to image intensities in folder)
         randomize = true;                               % whether to randomize movies shown
         onlineAnalysis = 'none'
@@ -76,7 +76,6 @@ classdef DefocusMovies < manookinlab.protocols.ManookinLabStageProtocol
                 obj.sequence = obj.sequence(:);
             end
             disp(obj.sequence);
-            disp('End of prepare run');
         end 
 
         
@@ -89,7 +88,7 @@ classdef DefocusMovies < manookinlab.protocols.ManookinLabStageProtocol
             p.setBackgroundColor(obj.backgroundIntensity)   % Set background intensity
             
             % Prep to display movie
-            fprintf('Loading movie from %s', fullfile(obj.stage_movie_directory, obj.movie_name));
+            fprintf('Loading movie from %s\n', fullfile(obj.stage_movie_directory, obj.movie_name));
 
             scene = stage.builtin.stimuli.Movie(fullfile(obj.stage_movie_directory, obj.movie_name));
             scene.size = [canvasSize(1),canvasSize(2)];
@@ -105,8 +104,6 @@ classdef DefocusMovies < manookinlab.protocols.ManookinLabStageProtocol
             sceneVisible = stage.builtin.controllers.PropertyController(scene, 'visible', ...
                 @(state)state.time >= obj.preTime * 1e-3 && state.time < (obj.preTime + obj.stimTime) * 1e-3);
             p.addController(sceneVisible);
-
-            disp('End of create presentation');
         end
         
         function prepareEpoch(obj, epoch)
@@ -115,12 +112,11 @@ classdef DefocusMovies < manookinlab.protocols.ManookinLabStageProtocol
             mov_name = obj.sequence(mod(obj.numEpochsCompleted,length(obj.sequence)) + 1);
             obj.movie_name = obj.moviePaths{mov_name,1};
 
-            fprintf('Movie name %s', obj.movie_name);
+            fprintf('Movie name %s\n', obj.movie_name);
             
             epoch.addParameter('movieName',obj.moviePaths{mov_name,1});
             epoch.addParameter('folder',obj.local_movie_directory);
 
-            disp('End of prepare Epoch');
         end
 
         function tf = shouldContinuePreparingEpochs(obj)
