@@ -10,7 +10,7 @@
 % property. And the property "matFile" stores the name of the .mat file,
 % which includes a number in the file name counting from file #1 to file #500.
 
-classdef DefocusImages < manookinlab.protocols.ManookinLabStageProtocol
+classdef DefocusNoise < manookinlab.protocols.ManookinLabStageProtocol
     properties
         amp                                                 % Output amplifier
         preTime     = 250                                   % Pre time in ms
@@ -67,6 +67,10 @@ classdef DefocusImages < manookinlab.protocols.ManookinLabStageProtocol
             
             if ~obj.isMeaRig
                 obj.showFigure('symphonyui.builtin.figures.ResponseFigure', obj.rig.getDevice(obj.amp));
+            end
+            
+            if obj.invertLCA && ~obj.includeLCA
+                error('If invertLCA is checked, includeLCA must also be checked.')
             end
 
             try

@@ -70,6 +70,10 @@ classdef DefocusBars < manookinlab.protocols.ManookinLabStageProtocol
                 obj.showFigure('symphonyui.builtin.figures.ResponseFigure', obj.rig.getDevice(obj.amp));
             end
 
+            if obj.invertLCA && ~obj.includeLCA
+                error('If invertLCA is checked, includeLCA must also be checked.')
+            end
+
             try
                 obj.imageDir = obj.rig.getDevice('Stage').getConfigurationSetting('local_image_directory');
                 if isempty(obj.imageDir)
