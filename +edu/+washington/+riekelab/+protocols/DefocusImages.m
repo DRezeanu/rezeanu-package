@@ -1,24 +1,28 @@
-% Loads and presents sets of 5 images contained within a .mat file within
-% a folder at the 'fileFolder' property.
+% Loads and presents sets of 5 images contained within a .mat file. The
+% fileFolder name is determined by the various perameters entered in the
+% epoch block params (stixel size, eccentricity, and green primary).
 %
 % Analysis note:
 % Because we are presenting multiple images per epoch, the epoch property imageOrder 
 % saves the order in which the five images in the .mat file were presented.
 % 
-% For now images [1, 2, 3, 4, 5] correspond to [-5, -3, 0, 3, 5] diopters of
-% defocus. And the property "matFile" stores the name of the checkerboard
-% file, which includes a number in the file name counting from file #1 to
-% file #500.
+% For now images [1, 2, 3, 4, 5] correspond to index of the defocusStates
+% property. And the property "matFile" stores the name of the .mat file,
+% which includes a number in the file name counting from file #1 to file #500.
 
-classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
+classdef DefocusImages < manookinlab.protocols.ManookinLabStageProtocol
     properties
         amp                                                 % Output amplifier
         preTime     = 250                                   % Pre time in ms
         flashTime   = 400                                   % Time to flash each image in ms
-        gapTime     = 0                                     % Gap between images in ms
+        gapTime     = 200                                   % Gap between images in ms
         tailTime    = 250                                   % Tail time in ms
         imagesPerEpoch = 5                                  % Number of images per .mat file
-        fileFolder  = 'DefocusImages_150um_-10_505nm'       % Folder containing the .mat files
+        stixelSize = 150                                    % Stixel size in microns (150 or 100)
+        eccentricity = -10                                  % Eccentricity (only -10)
+        greenPrimary = 565                                  % Green primary of rig config (Rig C Only)
+        includeLCA = true                                   % Boolean: true = with LCA, false = noLCA
+        invertLCA = false                                   % Boolean: inverts LCA only if LCA = true
         backgroundIntensity = 0.5                           % Intensity of background gray to use during gap time
         randomize = true;                                   % Whether to randomize the order of images in each .mat file
         onlineAnalysis = 'none'                             % Type of online analysis
@@ -28,6 +32,7 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
 
     properties (Dependent)
         stimTime                      % Total stimulus duration per epoch
+        fileFolder
     end
 
     properties (Dependent, SetAccess = private)
@@ -39,7 +44,7 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
         onlineAnalysisType = symphonyui.core.PropertyType('char', 'row', {'none', 'extracellular', 'exc', 'inh'}) 
         matFiles
         imageMatrix
-        image_dir
+        imageDir
         magnificationFactor
         backgroundImage
         preFrames
@@ -56,27 +61,6 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             [obj.amp, obj.ampType] = obj.createDeviceNamesProperty('Amp');
         end
         
-        function prepareRun_regen(obj, canvas, run_params)
-            obj.canvasSize = canvas.size;
-            obj.image_dir = run_params.image_dir;
-           
-            obj.preFrames = round((obj.preTime * 1e-3) * 60);
-            obj.flashFrames = round((obj.flashTime * 1e-3) * 60);
-            obj.gapFrames = round((obj.gapTime * 1e-3) * 60);
-            obj.tailFrames = round((obj.tailTime * 1e-3) * 60);
-            obj.stimFrames = round((obj.flashFrames + obj.gapFrames) * obj.imagesPerEpoch);
-
-            % Get list of .mat files in the directory
-            matFile_dir = fullfile(obj.image_dir, obj.fileFolder); 
-            dir_contents = dir(fullfile(matFile_dir, '*.mat'));
-            obj.matFiles = {dir_contents.name}; % Store file names
-            
-            if isempty(obj.matFiles)
-                error('No .mat files found in the specified directory: %s', matFile_dir);
-            else
-                fprintf('Loaded %d .mat files from %s.\n', length(obj.matFiles), matFile_dir);
-            end
-        end
 
         function prepareRun(obj)
              prepareRun@manookinlab.protocols.ManookinLabStageProtocol(obj);
@@ -86,12 +70,12 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             end
 
             try
-                obj.image_dir = obj.rig.getDevice('Stage').getConfigurationSetting('local_image_directory');
-                if isempty(obj.image_dir)
-                    obj.image_dir = 'C:\Users\Public\Documents\GitRepos\Symphony2\flashed_images\';
+                obj.imageDir = obj.rig.getDevice('Stage').getConfigurationSetting('local_image_directory');
+                if isempty(obj.imageDir)
+                    obj.imageDir = 'C:\Users\Public\Documents\GitRepos\Symphony2\flashed_images\';
                 end
             catch
-                obj.image_dir = 'C:\Users\Public\Documents\GitRepos\Symphony2\flashed_images\';
+                obj.imageDir = 'C:\Users\Public\Documents\GitRepos\Symphony2\flashed_images\';
             end
 
             obj.preFrames = round((obj.preTime * 1e-3) * 60);
@@ -101,7 +85,7 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             obj.stimFrames = round((obj.flashFrames + obj.gapFrames) * obj.imagesPerEpoch);
 
             % Get list of .mat files in the directory
-            matFile_dir = fullfile(obj.image_dir, obj.fileFolder);
+            matFile_dir = fullfile(obj.imageDir, obj.fileFolder);
             dir_contents = dir(fullfile(matFile_dir, '*.mat'));
 
             % Only load the first numberOfAverages number of images BEFORE
@@ -121,37 +105,6 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             end
         end
 
-        function prepareEpoch_regen(obj, epoch_params)
-            
-            % Load next .mat file
-            matFilePath = fullfile(obj.image_dir, obj.fileFolder, epoch_params.matFile);
-            data = load(matFilePath);
-            fields = fieldnames(data);
-            matData = data.(fields{1});
-            if iscell(matData)
-                images = matData;
-            else  
-                % Extract 5 RGB images
-                images = cell(1,size(matData, 3)/3);
-                for i = 1:5
-                    images{i} = matData(:,:, (3*i-2):(3*i)); % Extract RGB slices
-                end
-            end
-
-            assert(length(images)==length(obj.defocusStates), 'Error: More Images that Defocus States');
-                
-            % Randomize the same as they were in the saved epoch params
-            images = images(epoch_params.imageOrder);
-            
-            obj.imageMatrix = images; % Store image 
-            
-            % Get the magnification factor to retain aspect ratio.
-            obj.magnificationFactor = max(obj.canvasSize(2)/size(obj.imageMatrix{1},1),obj.canvasSize(1)/size(obj.imageMatrix{1},2));
-            
-            % Create the background image.
-            obj.backgroundImage = ones(size(images{1}))*obj.backgroundIntensity;
-            obj.backgroundImage = uint8(obj.backgroundImage*255);
-        end
         
         function prepareEpoch(obj, epoch)
             prepareEpoch@manookinlab.protocols.ManookinLabStageProtocol(obj, epoch);
@@ -172,21 +125,18 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
             current_index = obj.numEpochsCompleted+1;
 
             % Load next .mat file
-            matFilePath = fullfile(obj.image_dir, obj.fileFolder, obj.matFiles{current_index});
+            matFilePath = fullfile(obj.imageDir, obj.fileFolder, obj.matFiles{current_index});
             data = load(matFilePath);
             fields = fieldnames(data);
             matData = data.(fields{1});
+
             if iscell(matData)
                 images = matData;
             else  
-                % Extract 5 RGB images
-                images = cell(1,size(matData,3)/3);
-                for i = 1:5
-                    images{i} = matData(:,:, (3*i-2):(3*i)); % Extract RGB slices
-                end
+                error('DefocusImages requires that the images be organized into a cell array')
             end
 
-            assert(length(images)==length(obj.defocusStates), 'Error: More Images that Defocus States');
+            assert(length(images)==length(obj.defocusStates), 'Error: More Images per mat file that Defocus States');
 
                         
             % Generate original order indices
@@ -264,6 +214,18 @@ classdef PresentMatFiles < manookinlab.protocols.ManookinLabStageProtocol
 
         function stimTime = get.stimTime(obj)
             stimTime = ceil((obj.flashTime + obj.gapTime)* obj.imagesPerEpoch);
+        end
+
+        function fileFolder = get.fileFolder(obj)
+            if obj.includeLCA
+                if obj.invertLCA
+                    fileFolder = sprintf('DefocusImages_%dum_%decc_%dnm_invertedLCA', obj.stixelSize, obj.eccentricity, obj.greenPrimary);
+                else
+                    fileFolder = sprintf('DefocusImages_%dum_%decc_%dnm', obj.stixelSize, obj.eccentricity, obj.greenPrimary);
+                end
+            else
+                fileFolder = sprintf('DefocusImages_%dum_%decc_%dnm_noLCA', obj.stixelSize, obj.eccentricity, obj.greenPrimary);
+            end
         end
 
         function a = get.amp2(obj)
