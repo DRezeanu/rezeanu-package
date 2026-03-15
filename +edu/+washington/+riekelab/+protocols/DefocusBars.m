@@ -91,7 +91,7 @@ classdef DefocusBars < manookinlab.protocols.ManookinLabStageProtocol
 
             % Only load the first numberOfAverages number of images BEFORE
             % randomizing. 
-            if length(dir_contents) <= obj.numberOfAverages
+            if obj.numberOfAverages <= length(dir_contents)
                 dir_contents = dir_contents(1:obj.numberOfAverages);
             else
                 error('Number of averages is larger than the number of mat files in directory.')
