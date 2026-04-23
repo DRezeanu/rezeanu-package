@@ -23,6 +23,7 @@ classdef DefocusNoise < manookinlab.protocols.ManookinLabStageProtocol
         greenPrimary = 565                                  % Green primary of rig config (Rig C Only)
         includeLCA = true                                   % Boolean: true = with LCA, false = noLCA
         invertLCA = false                                   % Boolean: inverts LCA only if LCA = true
+        adjustedWhite = false                               % Boolean: white point adjusted stimuli
         backgroundIntensity = 0.5                           % Intensity of background gray to use during gap time
         randomize = true;                                   % Whether to randomize the order of images in each .mat file
         onlineAnalysis = 'none'                             % Type of online analysis
@@ -73,14 +74,8 @@ classdef DefocusNoise < manookinlab.protocols.ManookinLabStageProtocol
                 error('If invertLCA is checked, includeLCA must also be checked.')
             end
 
-            try
-                obj.imageDir = obj.rig.getDevice('Stage').getConfigurationSetting('local_image_directory');
-                if isempty(obj.imageDir)
-                    obj.imageDir = 'C:\Users\Public\Documents\GitRepos\Symphony2\flashed_images\';
-                end
-            catch
-                obj.imageDir = 'C:\Users\Public\Documents\GitRepos\Symphony2\flashed_images\';
-            end
+
+            obj.imageDir = 'C:\Users\Public\Documents\GitRepos\Symphony2\flashed_images\';
 
             obj.preFrames = round((obj.preTime * 1e-3) * 60);
             obj.flashFrames = round((obj.flashTime * 1e-3) * 60);
@@ -89,7 +84,12 @@ classdef DefocusNoise < manookinlab.protocols.ManookinLabStageProtocol
             obj.stimFrames = round((obj.flashFrames + obj.gapFrames) * obj.imagesPerEpoch);
 
             % Get list of .mat files in the directory
-            matFile_dir = fullfile(obj.imageDir, obj.fileFolder);
+            if obj.adjustedWhite
+                matFile_dir = fullfile(obj.iamgeDir, 'Defocus_WPA', obj.fileFolder);
+            else
+                matFile_dir = fullfile(obj.imageDir, obj.fileFolder);
+            end
+            
             dir_contents = dir(fullfile(matFile_dir, '*.mat'));
 
             % Only load the first numberOfAverages number of images BEFORE
