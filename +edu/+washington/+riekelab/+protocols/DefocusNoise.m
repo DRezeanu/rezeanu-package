@@ -24,6 +24,7 @@ classdef DefocusNoise < manookinlab.protocols.ManookinLabStageProtocol
         includeLCA = true                                   % Boolean: true = with LCA, false = noLCA
         invertLCA = false                                   % Boolean: inverts LCA only if LCA = true
         adjustedWhite = false                               % Boolean: white point adjusted stimuli
+        whitePoint = [1.0, 0.237, 0.87]                     % Manually adjusted white point
         backgroundIntensity = 0.5                           % Intensity of background gray to use during gap time
         randomize = true;                                   % Whether to randomize the order of images in each .mat file
         onlineAnalysis = 'none'                             % Type of online analysis
@@ -85,7 +86,7 @@ classdef DefocusNoise < manookinlab.protocols.ManookinLabStageProtocol
 
             % Get list of .mat files in the directory
             if obj.adjustedWhite
-                matFile_dir = fullfile(obj.iamgeDir, 'Defocus_WPA', obj.fileFolder);
+                matFile_dir = fullfile(obj.imageDir, 'Defocus_WPA', obj.fileFolder);
             else
                 matFile_dir = fullfile(obj.imageDir, obj.fileFolder);
             end
@@ -160,6 +161,11 @@ classdef DefocusNoise < manookinlab.protocols.ManookinLabStageProtocol
             
             % Create the background image.
             obj.backgroundImage = ones(size(images{1}))*obj.backgroundIntensity;
+            if obj.adjustedWhite
+                obj.backgroundImage(:, :, 1) = obj.whitePoint(1)/2;
+                obj.backgroundImage(:, :, 2) = obj.whitePoint(2)/2;
+                obj.backgroundImage(:, :, 3) = obj.whitePoint(3)/2;
+            end
             obj.backgroundImage = uint8(obj.backgroundImage*255);
         
             % Log metadata correctly
