@@ -54,6 +54,7 @@ classdef DefocusNoise < manookinlab.protocols.ManookinLabStageProtocol
         gapFrames
         stimFrames
         tailFrames
+        matFile_dir
     end
 
     methods
@@ -86,12 +87,12 @@ classdef DefocusNoise < manookinlab.protocols.ManookinLabStageProtocol
 
             % Get list of .mat files in the directory
             if obj.adjustedWhite
-                matFile_dir = fullfile(obj.imageDir, 'Defocus_WPA', obj.fileFolder);
+                obj.matFile_dir = fullfile(obj.imageDir, 'Defocus_WPA', obj.fileFolder);
             else
-                matFile_dir = fullfile(obj.imageDir, obj.fileFolder);
+                obj.matFile_dir = fullfile(obj.imageDir, obj.fileFolder);
             end
             
-            dir_contents = dir(fullfile(matFile_dir, '*.mat'));
+            dir_contents = dir(fullfile(obj.matFile_dir, '*.mat'));
 
             % Only load the first numberOfAverages number of images BEFORE
             % randomizing. 
@@ -104,9 +105,9 @@ classdef DefocusNoise < manookinlab.protocols.ManookinLabStageProtocol
             obj.matFiles = {dir_contents.name}; % Store file names
             
             if isempty(obj.matFiles)
-                error('No .mat files found in the specified directory: %s', matFile_dir);
+                error('No .mat files found in the specified directory: %s', obj.matFile_dir);
             else
-                fprintf('Loaded %d .mat files from %s.\n', length(obj.matFiles), matFile_dir);
+                fprintf('Loaded %d .mat files from %s.\n', length(obj.matFiles), obj.matFile_dir);
             end
         end
 
@@ -130,7 +131,7 @@ classdef DefocusNoise < manookinlab.protocols.ManookinLabStageProtocol
             current_index = obj.numEpochsCompleted+1;
 
             % Load next .mat file
-            matFilePath = fullfile(obj.imageDir, obj.fileFolder, obj.matFiles{current_index});
+            matFilePath = fullfile(obj.matFile_dir, obj.matFiles{current_index});
             data = load(matFilePath);
             fields = fieldnames(data);
             matData = data.(fields{1});
@@ -178,6 +179,7 @@ classdef DefocusNoise < manookinlab.protocols.ManookinLabStageProtocol
             epoch.addParameter('gapFrames', obj.gapFrames);
             epoch.addParameter('tailFrames', obj.tailFrames);
             epoch.addParameter('stimFrames', obj.stimFrames);
+            epoch.addParameter('matFile_dir', obj.matFile_dir);
         end
         
         function p = createPresentation(obj)
