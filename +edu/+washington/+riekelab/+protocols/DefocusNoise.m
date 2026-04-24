@@ -187,7 +187,11 @@ classdef DefocusNoise < manookinlab.protocols.ManookinLabStageProtocol
             totalTimePerEpoch = ceil((obj.preFrames + obj.stimFrames + obj.tailFrames)/60);
             p = stage.core.Presentation(totalTimePerEpoch);
             
-            p.setBackgroundColor(obj.backgroundIntensity); % Set background intensity 
+            if obj.adjustedWhite
+                p.setBackgroundColor(obj.whitePoint);
+            else
+                p.setBackgroundColor(obj.backgroundIntensity); % Set background intensity 
+            end
             
             % Prep to display image
             scene = stage.builtin.stimuli.Image(obj.imageMatrix{1});
