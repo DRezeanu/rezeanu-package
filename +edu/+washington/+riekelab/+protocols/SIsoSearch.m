@@ -83,6 +83,11 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
             attenuations = device.getResource('ndfAttenuations');
             fluxFactors = device.getResource('fluxFactors');
             ndfs = device.getConfigurationSetting('ndfs');
+
+            r_attenuations = attenuations('red');
+            g_attenuations = attenuations('green');
+            b_attenuations = attenuations('blue');
+
             disp('Current ndfs: ')
             disp(ndfs)
 
@@ -98,51 +103,46 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
             g_factor = fluxFactors('green');
             b_factor = fluxFactors('blue');
 
-
-            disp('Spectrum keys:')
-            disp(spectrum.keys)
             red_spectrum = str2double(spectrum('red'));
             green_spectrum = str2double(spectrum('green'));
             blue_spectrum = str2double(spectrum('blue'));
-            
-            disp('Photoreceptor keys:')
-            disp(photoreceptors.keys)
+
             intensity=1.0;
             units = 'intensity';
 
             LR_isom = edu.washington.riekelab.util.convisom(intensity, units, r_factor, red_spectrum, ...
-                    photoreceptors('lCone').spectrum, collectingArea, ndfs, attenuations);
+                    photoreceptors('lCone').spectrum, collectingArea, ndfs, r_attenuations);
 
             MR_isom = edu.washington.riekelab.util.convisom(intensity, units, r_factor, red_spectrum, ...
-                    photoreceptors('mCone').spectrum, collectingArea, ndfs, attenuations);
+                    photoreceptors('mCone').spectrum, collectingArea, ndfs, r_attenuations);
 
             SR_isom = edu.washington.riekelab.util.convisom(intensity, units, r_factor, red_spectrum, ...
-                    photoreceptors('sCone').spectrum, collectingArea, ndfs, attenuations);
+                    photoreceptors('sCone').spectrum, collectingArea, ndfs, r_attenuations);
 
             LG_isom = edu.washington.riekelab.util.convisom(intensity, units, g_factor, green_spectrum, ...
-                    photoreceptors('lCone').spectrum, collectingArea, ndfs, attenuations);
+                    photoreceptors('lCone').spectrum, collectingArea, ndfs, g_attenuations);
 
             MG_isom = edu.washington.riekelab.util.convisom(intensity, units, g_factor, green_spectrum, ...
-                    photoreceptors('mCone').spectrum, collectingArea, ndfs, attenuations);
+                    photoreceptors('mCone').spectrum, collectingArea, ndfs, g_attenuations);
 
             SG_isom = edu.washington.riekelab.util.convisom(intensity, units, g_factor, green_spectrum, ...
-                    photoreceptors('sCone').spectrum, collectingArea, ndfs, attenuations);
+                    photoreceptors('sCone').spectrum, collectingArea, ndfs, g_attenuations);
 
             LB_isom = edu.washington.riekelab.util.convisom(intensity, units, b_factor, blue_spectrum, ...
-                    photoreceptors('lCone').spectrum, collectingArea, ndfs, attenuations);
+                    photoreceptors('lCone').spectrum, collectingArea, ndfs, b_attenuations);
 
             MB_isom = edu.washington.riekelab.util.convisom(intensity, units, b_factor, blue_spectrum, ...
-                    photoreceptors('mCone').spectrum, collectingArea, ndfs, attenuations);
+                    photoreceptors('mCone').spectrum, collectingArea, ndfs, b_attenuations);
 
             SB_isom = edu.washington.riekelab.util.convisom(intensity, units, b_factor, blue_spectrum, ...
-                    photoreceptors('sCone').spectrum, collectingArea, ndfs, attenuations);
+                    photoreceptors('sCone').spectrum, collectingArea, ndfs, b_attenuations);
 
             qcatch = [
                 LR_isom, MR_isom, SR_isom;
                 LG_isom, MG_isom, SG_isom;
                 LB_isom, MB_isom, SB_isom];
 
-            disp('Quantal Catch:')
+            disp('Calculated quantal catch:')
             disp(qcatch)
             
         end
