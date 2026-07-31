@@ -108,6 +108,7 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
             disp('Photoreceptor keys:')
             disp(photoreceptors.keys)
             intensity=1.0;
+            units = 'intensity';
 
             LR_isom = edu.washington.riekelab.util.convisom(intensity, units, r_factor, red_spectrum, ...
                     photoreceptors('lCone').spectrum, collectingArea, ndfs, attenuations);
