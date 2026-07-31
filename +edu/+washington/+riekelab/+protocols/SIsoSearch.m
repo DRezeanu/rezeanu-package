@@ -83,6 +83,8 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
             attenuations = device.getResource('ndfAttenuations');
             fluxFactors = device.getResource('fluxFactors');
             ndfs = device.getConfigurationSetting('ndfs');
+            disp('Current ndfs: ')
+            disp(ndfs)
 
             source = epoch_group.source;
             while ~isempty(source) && ~any(strcmp(source.getResourceNames(), 'photoreceptors'))
@@ -92,7 +94,10 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
             photoreceptors = species.getResource('photoreceptors');
             collectingArea = 0.6;
 
-            factor = fluxFactors(1.0);
+            disp('Flux factor keys: ')
+            disp(fluxFactors.keys)
+
+            factor = 1.0;
             
             disp('Spectrum keys:')
             disp(spectrum.keys)
