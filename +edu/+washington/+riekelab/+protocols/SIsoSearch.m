@@ -94,36 +94,41 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
 
             factor = fluxFactors(1.0);
             
+            disp('Spectrum keys:')
+            disp(spectrum.keys)
             red_spectrum = str2double(spectrum('red'));
             green_spectrum = str2double(spectrum('green'));
             blue_spectrum = str2double(spectrum('blue'));
+            
+            disp('Photoreceptor keys:')
+            disp(photoreceptors.keys)
 
             LR_isom = edu.washington.riekelab.util.convisom(voltsOrIntensity, units, factor, red_spectrum, ...
-                    photoreceptors('L cone').spectrum, collectingArea, ndfs, attenuations);
+                    photoreceptors('l cone').spectrum, collectingArea, ndfs, attenuations);
 
             MR_isom = edu.washington.riekelab.util.convisom(voltsOrIntensity, units, factor, red_spectrum, ...
-                    photoreceptors('M cone').spectrum, collectingArea, ndfs, attenuations);
+                    photoreceptors('m cone').spectrum, collectingArea, ndfs, attenuations);
 
             SR_isom = edu.washington.riekelab.util.convisom(voltsOrIntensity, units, factor, red_spectrum, ...
-                    photoreceptors('S cone').spectrum, collectingArea, ndfs, attenuations);
+                    photoreceptors('s cone').spectrum, collectingArea, ndfs, attenuations);
 
             LG_isom = edu.washington.riekelab.util.convisom(voltsOrIntensity, units, factor, green_spectrum, ...
-                    photoreceptors('L cone').spectrum, collectingArea, ndfs, attenuations);
+                    photoreceptors('l cone').spectrum, collectingArea, ndfs, attenuations);
 
             MG_isom = edu.washington.riekelab.util.convisom(voltsOrIntensity, units, factor, green_spectrum, ...
-                    photoreceptors('M cone').spectrum, collectingArea, ndfs, attenuations);
+                    photoreceptors('m cone').spectrum, collectingArea, ndfs, attenuations);
 
             SG_isom = edu.washington.riekelab.util.convisom(voltsOrIntensity, units, factor, green_spectrum, ...
-                    photoreceptors('S cone').spectrum, collectingArea, ndfs, attenuations);
+                    photoreceptors('s cone').spectrum, collectingArea, ndfs, attenuations);
 
             LB_isom = edu.washington.riekelab.util.convisom(voltsOrIntensity, units, factor, blue_spectrum, ...
-                    photoreceptors('L cone').spectrum, collectingArea, ndfs, attenuations);
+                    photoreceptors('l cone').spectrum, collectingArea, ndfs, attenuations);
 
             MB_isom = edu.washington.riekelab.util.convisom(voltsOrIntensity, units, factor, blue_spectrum, ...
-                    photoreceptors('M cone').spectrum, collectingArea, ndfs, attenuations);
+                    photoreceptors('m cone').spectrum, collectingArea, ndfs, attenuations);
 
             SB_isom = edu.washington.riekelab.util.convisom(voltsOrIntensity, units, factor, blue_spectrum, ...
-                    photoreceptors('S cone').spectrum, collectingArea, ndfs, attenuations);
+                    photoreceptors('s cone').spectrum, collectingArea, ndfs, attenuations);
 
             qcatch = [
                 LR_isom, MR_isom, SR_isom;
