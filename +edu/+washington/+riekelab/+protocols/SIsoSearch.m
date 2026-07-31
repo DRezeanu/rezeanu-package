@@ -70,6 +70,70 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
             
             [obj.amp, obj.ampType] = obj.createDeviceNamesProperty('Amp');
         end
+
+        function didSetPersistor(obj)
+            didSetPersistor@edu.washington.riekelab.protocols.RiekeLabStageProtocol(obj);
+
+            device = obj.rig.getDevice('Stage');
+            epoch_group = obj.persistor.currentEpochGroup;
+
+            species = epoch_group.source;
+
+            spectrum = device.getResource('spectrum');
+            attenuations = device.getResource('ndfAttenuations');
+            fluxFactors = device.getResource('fluxFactors');
+            ndfs = device.getConfigurationSetting('ndfs');
+
+            source = epoch_group.source;
+            while ~isempty(source) && ~any(strcmp(source.getResourceNames(), 'photoreceptors'))
+                source = source.parent;
+            end
+            species=source;
+            photoreceptors = species.getResource('photoreceptors');
+            collectingArea = 0.6;
+
+            factor = fluxFactors(1.0);
+            
+            red_spectrum = str2double(spectrum('red'));
+            green_spectrum = str2double(spectrum('green'));
+            blue_spectrum = str2double(spectrum('blue'));
+
+            LR_isom = edu.washington.riekelab.util.convisom(voltsOrIntensity, units, factor, red_spectrum, ...
+                    photoreceptors('L cone').spectrum, collectingArea, ndfs, attenuations);
+
+            MR_isom = edu.washington.riekelab.util.convisom(voltsOrIntensity, units, factor, red_spectrum, ...
+                    photoreceptors('M cone').spectrum, collectingArea, ndfs, attenuations);
+
+            SR_isom = edu.washington.riekelab.util.convisom(voltsOrIntensity, units, factor, red_spectrum, ...
+                    photoreceptors('S cone').spectrum, collectingArea, ndfs, attenuations);
+
+            LG_isom = edu.washington.riekelab.util.convisom(voltsOrIntensity, units, factor, green_spectrum, ...
+                    photoreceptors('L cone').spectrum, collectingArea, ndfs, attenuations);
+
+            MG_isom = edu.washington.riekelab.util.convisom(voltsOrIntensity, units, factor, green_spectrum, ...
+                    photoreceptors('M cone').spectrum, collectingArea, ndfs, attenuations);
+
+            SG_isom = edu.washington.riekelab.util.convisom(voltsOrIntensity, units, factor, green_spectrum, ...
+                    photoreceptors('S cone').spectrum, collectingArea, ndfs, attenuations);
+
+            LB_isom = edu.washington.riekelab.util.convisom(voltsOrIntensity, units, factor, blue_spectrum, ...
+                    photoreceptors('L cone').spectrum, collectingArea, ndfs, attenuations);
+
+            MB_isom = edu.washington.riekelab.util.convisom(voltsOrIntensity, units, factor, blue_spectrum, ...
+                    photoreceptors('M cone').spectrum, collectingArea, ndfs, attenuations);
+
+            SB_isom = edu.washington.riekelab.util.convisom(voltsOrIntensity, units, factor, blue_spectrum, ...
+                    photoreceptors('S cone').spectrum, collectingArea, ndfs, attenuations);
+
+            qcatch = [
+                LR_isom, MR_isom, SR_isom;
+                LG_isom, MG_isom, SG_isom;
+                LB_isom, MB_isom, SB_isom];
+
+            disp('Quantal Catch:')
+            disp(qcatch)
+            
+        end
         
         function prepareRun(obj)
             prepareRun@manookinlab.protocols.ManookinLabStageProtocol(obj);
@@ -328,6 +392,20 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
         function tf = shouldContinueRun(obj)
             tf = obj.numEpochsCompleted < obj.numberOfAverages;
         end
+        
+        function a = getCollectingArea(map, path, orientation)
+                if (strcmpi(path, 'below') && any(strcmpi(orientation, {'down', 'lateral'}))) ...
+                        || (strcmpi(path, 'above') && any(strcmpi(orientation, {'up', 'lateral'})))
+                    a = map('photoreceptorSide');
+                elseif (strcmpi(path, 'below') && strcmpi(orientation, 'up')) ...
+                        || (strcmpi(path, 'above') && strcmpi(orientation, 'down'))
+                    a = map('ganglionCellSide');
+                else
+                    warning('Unexpected light path or photoreceptor orientation. Using 0 for collecting area.');
+                    a = 0;
+                end
+        end
+
     end
     
 end 
