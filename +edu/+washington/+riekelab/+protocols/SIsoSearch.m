@@ -85,7 +85,7 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
             attenuations = device.getResource('ndfAttenuations');
             fluxFactors = device.getResource('fluxFactors');
             ndfs = device.getConfigurationSetting('ndfs');
-            path = v.device.getConfigurationSetting('lightPath');
+            path = device.getConfigurationSetting('lightPath');
 
             % Pull channel specific NDF attenuation values
             r_attenuations = attenuations('red');
