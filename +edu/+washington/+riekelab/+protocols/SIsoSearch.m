@@ -110,7 +110,11 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
                 source = source.parent;
             end
             preparation = source;
+
+            disp('About to set prep')
             prep = preparation.getProperty('preparation');
+
+            disp('Did set prep')
 
             pr_orientations = preparation.getResource('photoreceptorOrientations');
             if pr_orientations.isKey(prep)
