@@ -66,18 +66,7 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
     
     methods
 
-        function a = getCollectingArea(map, path, orientation)
-            if (strcmpi(path, 'below') && any(strcmpi(orientation, {'down', 'lateral'}))) ...
-                    || (strcmpi(path, 'above') && any(strcmpi(orientation, {'up', 'lateral'})))
-                a = map('photoreceptorSide');
-            elseif (strcmpi(path, 'below') && strcmpi(orientation, 'up')) ...
-                    || (strcmpi(path, 'above') && strcmpi(orientation, 'down'))
-                a = map('ganglionCellSide');
-            else
-                warning('Unexpected light path or photoreceptor orientation. Using 0 for collecting area.');
-                a = 0;
-            end
-        end
+        
         
         function didSetRig(obj)
             didSetRig@edu.washington.riekelab.protocols.RiekeLabStageProtocol(obj);
@@ -87,6 +76,19 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
 
         function didSetPersistor(obj)
             didSetPersistor@edu.washington.riekelab.protocols.RiekeLabStageProtocol(obj);
+
+            function a = getCollectingArea(map, path, orientation)
+                if (strcmpi(path, 'below') && any(strcmpi(orientation, {'down', 'lateral'}))) ...
+                        || (strcmpi(path, 'above') && any(strcmpi(orientation, {'up', 'lateral'})))
+                    a = map('photoreceptorSide');
+                elseif (strcmpi(path, 'below') && strcmpi(orientation, 'up')) ...
+                        || (strcmpi(path, 'above') && strcmpi(orientation, 'down'))
+                    a = map('ganglionCellSide');
+                else
+                    warning('Unexpected light path or photoreceptor orientation. Using 0 for collecting area.');
+                    a = 0;
+                end
+            end
 
             % Grab rig device and epoch group 
             device = obj.rig.getDevice('Stage');
