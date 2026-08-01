@@ -65,6 +65,19 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
     end
     
     methods
+
+        function a = getCollectingArea(map, path, orientation)
+            if (strcmpi(path, 'below') && any(strcmpi(orientation, {'down', 'lateral'}))) ...
+                    || (strcmpi(path, 'above') && any(strcmpi(orientation, {'up', 'lateral'})))
+                a = map('photoreceptorSide');
+            elseif (strcmpi(path, 'below') && strcmpi(orientation, 'up')) ...
+                    || (strcmpi(path, 'above') && strcmpi(orientation, 'down'))
+                a = map('ganglionCellSide');
+            else
+                warning('Unexpected light path or photoreceptor orientation. Using 0 for collecting area.');
+                a = 0;
+            end
+        end
         
         function didSetRig(obj)
             didSetRig@edu.washington.riekelab.protocols.RiekeLabStageProtocol(obj);
@@ -110,11 +123,7 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
                 source = source.parent;
             end
             preparation = source;
-
-            disp('About to set prep')
             prep = preparation.getProperty('preparation');
-
-            disp('Did set prep')
 
             pr_orientations = preparation.getResource('photoreceptorOrientations');
             if pr_orientations.isKey(prep)
@@ -122,9 +131,6 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
             else
                 pr_orientation = '';
             end
-
-            disp('PR Orientation: ')
-            disp(pr_orientation)
 
             % Grab collecting area for each cone type
             lCone_collectingArea = getCollectingArea(photoreceptors('lCone').collectingArea, path, pr_orientation);
@@ -445,19 +451,6 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
         
         function tf = shouldContinueRun(obj)
             tf = obj.numEpochsCompleted < obj.numberOfAverages;
-        end
-        
-        function a = getCollectingArea(map, path, orientation)
-                if (strcmpi(path, 'below') && any(strcmpi(orientation, {'down', 'lateral'}))) ...
-                        || (strcmpi(path, 'above') && any(strcmpi(orientation, {'up', 'lateral'})))
-                    a = map('photoreceptorSide');
-                elseif (strcmpi(path, 'below') && strcmpi(orientation, 'up')) ...
-                        || (strcmpi(path, 'above') && strcmpi(orientation, 'down'))
-                    a = map('ganglionCellSide');
-                else
-                    warning('Unexpected light path or photoreceptor orientation. Using 0 for collecting area.');
-                    a = 0;
-                end
         end
 
     end
