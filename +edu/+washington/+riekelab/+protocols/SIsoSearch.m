@@ -110,6 +110,7 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
                 source = source.parent;
             end
             preparation = source;
+            prep = preparation.getProperty('preparation');
 
             pr_orientations = preparation.getResource('photoreceptorOrientations');
             if pr_orientations.isKey(prep)
@@ -117,6 +118,9 @@ classdef SIsoSearch < manookinlab.protocols.ManookinLabStageProtocol
             else
                 pr_orientation = '';
             end
+
+            disp('PR Orientation: ')
+            disp(pr_orientation)
 
             % Grab collecting area for each cone type
             lCone_collectingArea = getCollectingArea(photoreceptors('lCone').collectingArea, path, pr_orientation);
