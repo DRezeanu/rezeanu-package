@@ -1,4 +1,4 @@
-classdef ContrastReversingGrating < manookinlab.protocols.ManookinLabStageProtocol
+classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProtocol
     properties
         amp                             % Output amplifier
         preTime = 250                   % Grating leading duration (ms)
@@ -58,6 +58,7 @@ classdef ContrastReversingGrating < manookinlab.protocols.ManookinLabStageProtoc
         end
         
         function prepareRun(obj)
+            fprintf('\nPreparing run\n');
             prepareRun@manookinlab.protocols.ManookinLabStageProtocol(obj);
 
             if ~obj.isMeaRig
@@ -85,8 +86,11 @@ classdef ContrastReversingGrating < manookinlab.protocols.ManookinLabStageProtoc
 
             % Organize stimulus and analysis parameters.
             obj.organizeParameters();
+
+            fprintf('\nPrepared run\n');
         end
         
+
         function parseChromaticClass(obj, className)
 
             switch className
@@ -109,6 +113,7 @@ classdef ContrastReversingGrating < manookinlab.protocols.ManookinLabStageProtoc
         end
 
         function p = createPresentation(obj)
+            fprintf('\nCreating presentation\n');
             
             p = stage.core.Presentation((obj.preTime + obj.stimTime + obj.tailTime) * (60/obj.frameRate) * 1e-3); % Create presentation of specified duration
             p.setBackgroundColor(obj.backgroundIntensity); % Set background intensity
@@ -181,6 +186,7 @@ classdef ContrastReversingGrating < manookinlab.protocols.ManookinLabStageProtoc
                     p.addStimulus(mask);
                 end
             end
+            fprintf('\nCreated presentation\n');
         end
         
         function setRawImage(obj)
@@ -244,6 +250,7 @@ classdef ContrastReversingGrating < manookinlab.protocols.ManookinLabStageProtoc
         
         function prepareEpoch(obj, epoch)
             prepareEpoch@manookinlab.protocols.ManookinLabStageProtocol(obj, epoch);
+            fprintf('\nPreparing epoch\n');
 
             % Remove the Amp responses if it's an MEA rig.
             if obj.isMeaRig
@@ -272,6 +279,7 @@ classdef ContrastReversingGrating < manookinlab.protocols.ManookinLabStageProtoc
             epoch.addParameter('mContrast', obj.coneContrasts(2));
             epoch.addParameter('sContrast', obj.coneContrasts(3));
             epoch.addParameter('rodContrast', obj.coneContrasts(4));
+            fprintf('\nPrepared Epoch\n');
         end
 
         function numberOfAverages = get.numberOfAverages(obj)
