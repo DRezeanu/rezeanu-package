@@ -48,6 +48,7 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
     properties (Dependent) 
         stimTime
         numberOfAverages
+        temporalFrequencyFrames
     end
     
     methods
@@ -96,15 +97,15 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
 
             switch className
                 case 'achromatic'
-                    obj.colorWeights = [1,1,1] * obj.contrast;
+                    obj.colorWeights = [1,1,1];
                 case 'yellow'
-                    obj.colorWeights = [1,1,0] * obj.contrast;
+                    obj.colorWeights = [1,1,0];
                 case 'red'
-                    obj.colorWeights = [1,0,0] * obj.contrast;
+                    obj.colorWeights = [1,0,0];
                 case 'green'
-                    obj.colorWeights = [0,1,0] * obj.contrast;
+                    obj.colorWeights = [0,1,0];
                 case 'blue'
-                    obj.colorWeights = [0,0,1] * obj.contrast;
+                    obj.colorWeights = [0,0,1];
                 case 'S-Iso'
                     sIsoWeights = obj.qCatch(:, 1:3)' \  [0,0,1]';
                     obj.colorWeights = sIsoWeights/max(abs(sIsoWeights));
@@ -145,9 +146,9 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
             
             
             % Set the reversing grating
-            function g = setReversingGrating(obj, time)
-                if time >= 0
-                    phase = round(0.5 * sin(time * 2 * pi * obj.temporalFrequency) + 0.5) * pi;
+            function g = setReversingGrating(obj, frame)
+                if frame >= 0
+                    phase = round(0.5 * sin(frame * 2 * pi * obj.temporalFrequencyFrames) + 0.5) * pi;
                 else
                     phase = 0;
                 end
@@ -281,6 +282,10 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
             epoch.addParameter('sContrast', obj.coneContrasts(3));
             epoch.addParameter('rodContrast', obj.coneContrasts(4));
             fprintf('\nPrepared Epoch\n');
+        end
+
+        function temporalFrequencyFrames = get.temporalFrequencyFrames(obj)
+            temporalFrequencyFrames = obj.temporalFrequency/60;
         end
 
         function numberOfAverages = get.numberOfAverages(obj)
