@@ -79,7 +79,7 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
             obj.qCatch = edu.washington.riekelab.rezeanu.utils.getLcrQuantalCatch(device, obj.persistor);
             
             % Assign color weights from chromatic class
-            obj.parseChromaticClass();
+            obj.parseChromaticClass(obj.chromaticClass);
             
             % Calculate the cone contrasts.
             obj.coneContrasts = coneContrast(obj.backgroundIntensity*obj.qCatch, ...
