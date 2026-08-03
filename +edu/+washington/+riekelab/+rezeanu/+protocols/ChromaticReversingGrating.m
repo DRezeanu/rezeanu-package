@@ -99,18 +99,18 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
                 case 'achromatic'
                     obj.colorWeights = [1,1,1];
                 case 'yellow'
-                    obj.colorWeights = [1,1,0];
+                    obj.colorWeights = [1,1,-1];
                 case 'red'
-                    obj.colorWeights = [1,0,0];
+                    obj.colorWeights = [1,-1,-1];
                 case 'green'
-                    obj.colorWeights = [0,1,0];
+                    obj.colorWeights = [-1,1,-1];
                 case 'blue'
-                    obj.colorWeights = [0,0,1];
+                    obj.colorWeights = [-1,-1,1];
                 case 'S-Iso'
                     sIsoWeights = obj.qCatch(:, 1:3)' \  [0,0,1]';
                     obj.colorWeights = sIsoWeights/max(abs(sIsoWeights));
                 otherwise
-                    obj.colorWeights = [1,1,1] * obj.contrast;
+                    obj.colorWeights = [1,1,1];
             end
         end
 
@@ -200,12 +200,7 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
             
             % Calculate the orientation in radians.
             rotRads = obj.orientation / 180 * pi;
-            
-            
-%             [x,y] = meshgrid(...
-%                 linspace(-obj.canvasSize(1)/2, obj.canvasSize(1)/2, obj.canvasSize(1)/downsamp), ...
-%                 linspace(-obj.canvasSize(2)/2, obj.canvasSize(2)/2, obj.canvasSize(2)/downsamp));
-            
+               
             % Center the stimulus.
             x = x + obj.centerOffset(1)*cos(rotRads);
             y = y + obj.centerOffset(2)*sin(rotRads);
@@ -216,7 +211,6 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
             % Calculate the raw grating image.
             img = (cos(0)*x + sin(0) * y) * obj.spatialFreq;
             obj.rawImage = img(1,:);
-%             obj.rawImage = (cos(rotRads) * x + sin(rotRads) * y) * obj.spatialFreq;
             
             if ~strcmp(obj.chromaticClass, 'achromatic')
                 obj.rawImage = repmat(obj.rawImage, [1 1 3]);
