@@ -75,7 +75,7 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
             % Calculate the spatial phase in radians.
             obj.spatialPhaseRad = obj.spatialPhase / 180 * pi;
 
-            device = rig.getDevice('Stage');
+            device = obj.rig.getDevice('Stage');
             obj.qCatch = edu.washington.riekelab.rezeanu.utils.getLcrQuantalCatch(device, obj.persistor);
             
             % Assign color weights from chromatic class
