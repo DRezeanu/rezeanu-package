@@ -25,17 +25,12 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
         ampType
         apertureClassType = symphonyui.core.PropertyType('char', 'row', {'spot', 'annulus'})
         spatialClassType = symphonyui.core.PropertyType('char', 'row', {'sinewave', 'squarewave'})
-        chromaticClassType = symphonyui.core.PropertyType('char', 'row', {'achromatic','red','green','yellow','blue','S-iso','M-iso','L-iso'})
+        chromaticClassType = symphonyui.core.PropertyType('char', 'row', {'achromatic','red','green','blue','S-iso','M-iso','L-iso', 'LM-iso'})
         onlineAnalysisType = symphonyui.core.PropertyType('char', 'row', {'none', 'extracellular', 'spikes_CClamp', 'subthresh_CClamp', 'analog'})
         rawImage
         spatialPhaseRad % The spatial phase in radians.
         spatialFrequencies
         spatialFreq % The current spatial frequency for the epoch
-        xaxis
-        F1Amp
-        F2Amp
-        F1Phase
-        repsPerX
         coneContrasts 
         qCatch
         preFrames
@@ -43,6 +38,7 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
         waitFrames
         moveFrames
         stimFrames
+        colorWeights
     end
     
     properties (Dependent) 
@@ -60,7 +56,6 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
         end
         
         function prepareRun(obj)
-            fprintf('\nPreparing run\n');
             prepareRun@manookinlab.protocols.ManookinLabStageProtocol(obj);
 
             if ~obj.isMeaRig
@@ -89,7 +84,6 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
             % Organize stimulus and analysis parameters.
             obj.organizeParameters();
 
-            fprintf('\nPrepared run\n');
         end
         
 
@@ -98,24 +92,30 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
             switch className
                 case 'achromatic'
                     obj.colorWeights = [1,1,1];
-                case 'yellow'
-                    obj.colorWeights = [1,1,-1];
                 case 'red'
                     obj.colorWeights = [1,-1,-1];
                 case 'green'
                     obj.colorWeights = [-1,1,-1];
                 case 'blue'
                     obj.colorWeights = [-1,-1,1];
-                case 'S-Iso'
+                case 'S-iso'
                     sIsoWeights = obj.qCatch(:, 1:3)' \  [0,0,1]';
                     obj.colorWeights = sIsoWeights/max(abs(sIsoWeights));
+                case 'M-iso'
+                    mIsoWeights = obj.qCatch(:, 1:3)' \ [0, 1, 0]';
+                    obj.colorWeights = mIsoWeights/max(abs(mIsoWeights));
+                case 'L-iso'
+                    lIsoWeights = obj.qCatch(:, 1:3)' \ [1, 0, 0]';
+                    obj.colorWeights = lIsoWeights/max(abs(lIsoWeights));
+                case 'LM-iso'
+                    lmIsoWeights = obj.qCatch(:, 1:3)' \ [1, 1, 0]';
+                    obj.colorWeights = lmIsoWeights/max(abs(lmIsoWeights));
                 otherwise
                     obj.colorWeights = [1,1,1];
             end
         end
 
         function p = createPresentation(obj)
-            fprintf('\nCreating presentation\n');
             
             p = stage.core.Presentation((obj.preTime + obj.stimTime + obj.tailTime) * (60/obj.frameRate) * 1e-3); % Create presentation of specified duration
             p.setBackgroundColor(obj.backgroundIntensity); % Set background intensity
@@ -188,33 +188,45 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
                     p.addStimulus(mask);
                 end
             end
-            fprintf('\nCreated presentation\n');
         end
         
         function setRawImage(obj)
-            downsamp = 3;
+
             sz = ceil(sqrt(obj.canvasSize(1)^2 + obj.canvasSize(2)^2));
-            [x,y] = meshgrid(...
-                linspace(-sz/2, sz/2, sz/downsamp), ...
-                linspace(-sz/2, sz/2, sz/downsamp));
-            
-            % Calculate the orientation in radians.
             rotRads = obj.orientation / 180 * pi;
-               
-            % Center the stimulus.
-            x = x + obj.centerOffset(1)*cos(rotRads);
-            y = y + obj.centerOffset(2)*sin(rotRads);
             
-            x = x / min(obj.canvasSize) * 2 * pi;
-            y = y / min(obj.canvasSize) * 2 * pi;
-            
-            % Calculate the raw grating image.
-            img = (cos(0)*x + sin(0) * y) * obj.spatialFreq;
-            obj.rawImage = img(1,:);
+            offsetAlongAxis = obj.centerOffset(1)*cos(rotRads) + obj.centerOffset(2)*sin(rotRads);
+            x = linspace(-sz/2 + 0.5, sz/2 - 0.5, sz) - offsetAlongAxis;
+
+            obj.rawImage = x / min(obj.canvasSize) * 2 * pi * obj.spatialFreq;
             
             if ~strcmp(obj.chromaticClass, 'achromatic')
                 obj.rawImage = repmat(obj.rawImage, [1 1 3]);
             end
+
+
+            % sz = ceil(sqrt(obj.canvasSize(1)^2 + obj.canvasSize(2)^2));
+            % [x,y] = meshgrid(...
+            %     linspace(-sz/2, sz/2, sz), ...
+            %     linspace(-sz/2, sz/2, sz));
+            % 
+            % % Calculate the orientation in radians.
+            % rotRads = obj.orientation / 180 * pi;
+            % 
+            % % Center the stimulus.
+            % x = x + obj.centerOffset(1)*cos(rotRads);
+            % y = y + obj.centerOffset(2)*sin(rotRads);
+            % 
+            % x = x / min(obj.canvasSize) * 2 * pi;
+            % y = y / min(obj.canvasSize) * 2 * pi;
+            % 
+            % % Calculate the raw grating image.
+            % img = (cos(0)*x + sin(0) * y) * obj.spatialFreq;
+            % obj.rawImage = img(1,:);
+            % 
+            % if ~strcmp(obj.chromaticClass, 'achromatic')
+            %     obj.rawImage = repmat(obj.rawImage, [1 1 3]);
+            % end
         end
         
         % This is a method of organizing stimulus parameters.
@@ -238,15 +250,10 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
             % Copy to spatial frequencies.
             obj.spatialFrequencies = freqs;
             
-            obj.xaxis = unique(obj.spatialFrequencies);
-            obj.F1Amp = zeros(size(obj.xaxis));
-            obj.F1Phase = zeros(size(obj.xaxis));
-            obj.repsPerX = zeros(size(obj.xaxis));
         end
         
         function prepareEpoch(obj, epoch)
             prepareEpoch@manookinlab.protocols.ManookinLabStageProtocol(obj, epoch);
-            fprintf('\nPreparing epoch\n');
 
             % Remove the Amp responses if it's an MEA rig.
             if obj.isMeaRig
@@ -275,7 +282,6 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
             epoch.addParameter('mContrast', obj.coneContrasts(2));
             epoch.addParameter('sContrast', obj.coneContrasts(3));
             epoch.addParameter('rodContrast', obj.coneContrasts(4));
-            fprintf('\nPrepared Epoch\n');
         end
 
         function temporalFrequencyFrames = get.temporalFrequencyFrames(obj)
