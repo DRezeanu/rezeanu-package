@@ -244,7 +244,7 @@ classdef Barcode < manookinlab.protocols.ManookinLabStageProtocol
         
         function p = createPresentation(obj)
 
-            p = stage.core.Presentation((obj.preTime + obj.stimTime + obj.tailTime)*(60/59) * 1e-3);
+            p = stage.core.Presentation((obj.preTime + obj.stimTime + obj.tailTime)*(60/obj.frameRate) * 1e-3);
             p.setBackgroundColor(obj.backgroundIntensity);
             
             barcode = stage.builtin.stimuli.Image(obj.imageMatrix);
