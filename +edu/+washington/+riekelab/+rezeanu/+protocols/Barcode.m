@@ -2,79 +2,106 @@ classdef Barcode < manookinlab.protocols.ManookinLabStageProtocol
     properties
         amp                             % Output amplifier
         preTime = 500                   % Bar leading duration (ms)
-        stimTime = 2500                 % Bar duration (ms)
         tailTime = 500                  % Bar trailing duration (ms)
-        orientations = 0:30:330         % Bar angle (deg)
-        speed = 1000                    % Bar speed (pix/sec)
+        orientations = 0:45:315         % Bar angle (deg)
+        speeds = [635, 1205, 1660, 3150]  % Bar speeds (um/sec)
         contrast = 1
-        barSize = [200, 10000]          % Bar size (x,y) in microns
+        barWidths = [105, 105, 595, 595,...
+            175, 245, 525, 455,...
+            490, 420, 665, 105,...
+            665, 595, 35, 490,...
+            280, 35, 560, 420,...
+            490, 350, 210, 420,...
+            175, 280, 525]              % Bar widths in microns
         chromaticClass = 'achromatic'
         backgroundIntensity = 0.5       % Background light intensity (0-1)
         innerMaskRadius = 0             % Inner mask radius in microns.
         outerMaskRadius = 0             % Outer mask radius in microns.
         randomOrder = true              % Random orientation order?
-        onlineAnalysis = 'extracellular'         % Online analysis type.
-        numberOfAverages = uint16(32)   % Number of epochs
+        onlineAnalysis = 'none'         % Online analysis type.
+        numberOfReps = uint16(5)        % N times each speed/ori combo is shown
+    end
+    
+    properties (Dependent)
+        numberOfBarcodes
+        numberOfAverages
     end
     
     properties (Hidden)
         ampType
-        onlineAnalysisType = symphonyui.core.PropertyType('char', 'row', {'none', 'extracellular', 'spikes_CClamp', 'subthresh_CClamp', 'analog'})
+        onlineAnalysisType = symphonyui.core.PropertyType('char', 'row',...
+            {'none', 'extracellular', 'spikes_CClamp',...
+            'subthresh_CClamp', 'analog'})
         orientationsType = symphonyui.core.PropertyType('denserealdouble','matrix')
-        contrastsType = symphonyui.core.PropertyType('denserealdouble','matrix')
-        chromaticClassType = symphonyui.core.PropertyType('char', 'row', {'achromatic', 'blue-yellow', 'red-green', 'S-Iso'})
-        sequence
+        barWidthsType = symphonyui.core.PropertyType('denserealdouble','matrix')
+        speedsType = symphonyui.core.PropertyType('denserealdouble','matrix')
+        chromaticClassType = symphonyui.core.PropertyType('char', 'row',...
+            {'achromatic', 'red', 'green', 'blue', 'yellow', ...
+            'blue-yellow', 'red-green', 'S-Iso'})
+        orientationSequence
+        speedSequence
         orientation
         orientationRads
-        barSizePix
+        barWidthsPix
         innerMaskRadiusPix
         outerMaskRadiusPix
-        speedPix
-        barRGB
-        backgroundRGB
+        lightBar
+        darkBar
+        imageMatrix
+        stimTime
+        stimFrames
+        preFrames
+        tailFrames
+        speedsPix
+        speedPixPerFrame
+        barcodeSize
     end
     
     methods
         function didSetRig(obj)
             didSetRig@edu.washington.riekelab.protocols.RiekeLabStageProtocol(obj);
-            
             [obj.amp, obj.ampType] = obj.createDeviceNamesProperty('Amp');
         end
         
         function prepareRun(obj)
             prepareRun@manookinlab.protocols.ManookinLabStageProtocol(obj);
             
-            obj.barSizePix = obj.rig.getDevice('Stage').um2pix(obj.barSize);
-            obj.outerMaskRadiusPix = obj.rig.getDevice('Stage').um2pix(obj.outerMaskRadius);
-            obj.speedPix = obj.rig.getDevice('Stage').um2pix(obj.speed);
+            obj.preFrames = round(obj.preTime*1e-3*60);
+            obj.tailFrames = round(obj.tailTime*1e-3*60);
             
-            if length(obj.orientations) > 1
-                colors = pmkmp(length(obj.orientations),'CubicYF');
-            else
-                colors = zeros(1,3);
-            end
+            % Epoch constructor can't CREATE stimTime de novo, it has to be
+            % created here, and then every epoch manipulates it.
+            obj.stimTime = 2000;
+            obj.stimFrames = round(obj.stimTime*1e-3*60);
+
+            
+            obj.barWidthsPix = obj.rig.getDevice('Stage').um2pix(obj.barWidths);
+            obj.outerMaskRadiusPix = obj.rig.getDevice('Stage').um2pix(obj.outerMaskRadius);
+            obj.innerMaskRadiusPix = obj.rig.getDevice('Stage').um2pix(obj.outerMaskRadius);
+            obj.speedsPix = obj.rig.getDevice('Stage').um2pix(obj.speeds);
             
             if ~obj.isMeaRig
+                % Pull colors for single-cell online analysis figures
+                if length(obj.orientations) > 1
+                    colors = pmkmp(length(obj.orientations),'CubicYF');
+                else
+                    colors = zeros(1,3);
+                end
+                
                 obj.showFigure('symphonyui.builtin.figures.ResponseFigure', obj.rig.getDevice(obj.amp));
                 if ~strcmp(obj.onlineAnalysis, 'none')
                     obj.showFigure('manookinlab.figures.MeanResponseFigure', ...
                         obj.rig.getDevice(obj.amp),'recordingType',obj.onlineAnalysis,...
                         'sweepColor',colors,...
                         'groupBy',{'orientation'});
+
+                    if length(unique(obj.orientations)) > 1
+                        obj.showFigure('manookinlab.figures.DirectionFigure', ...
+                            obj.rig.getDevice(obj.amp),'recordingType',obj.onlineAnalysis,...
+                            'preTime', obj.preTime, 'stimTime', obj.stimTime, ...
+                            'orientations', unique(obj.orientations));                 
+                    end
                 end
-                if length(unique(obj.orientations)) > 1
-                    obj.showFigure('manookinlab.figures.DirectionFigure', ...
-                        obj.rig.getDevice(obj.amp),'recordingType',obj.onlineAnalysis,...
-                        'preTime', obj.preTime, 'stimTime', obj.stimTime, ...
-                        'orientations', unique(obj.orientations));                 
-                end
-            end
-            
-            % Get the frame rate. Need to check if it's a LCR rig.
-            if strcmpi(obj.stageClass, 'LightCrafter')
-                obj.frameRate = obj.rig.getDevice('Stage').getPatternRate();
-            else
-                obj.frameRate = obj.rig.getDevice('Stage').getMonitorRefreshRate();
             end
             
             % Get the canvas size.
@@ -87,85 +114,159 @@ classdef Barcode < manookinlab.protocols.ManookinLabStageProtocol
                 obj.outerMaskRadiusPix = max(obj.canvasSize/2);
             end
             
-            obj.organizeParameters();
+            % Set the barcode colors
+            [obj.lightBar, obj.darkBar] = obj.parseChromaticClass(obj.chromaticClass);
             
-            % Set the bar and background contrasts.
-            [obj.barRGB, obj.backgroundRGB] = obj.getRGB(obj.chromaticClass);
-%             obj.barRGB = obj.getRGB(obj.barColor);
-%             obj.backgroundRGB = (obj.getRGB(obj.backgroundColor)-1)*obj.backgroundIntensity+obj.backgroundIntensity;
+            % Generate barcode image
+            obj.generateBarcode();
+            obj.barcodeSize = size(obj.imageMatrix);
+            
+            % Generate the order in which speed/ori combos will be shown
+            obj.getStimulusOrder();
+
         end
         
-        function [barColor, backgroundColor] = getRGB(obj, colorClass)
-            bar_rgb = obj.contrast*obj.backgroundIntensity+obj.backgroundIntensity;
-            background_rgb = (bar_rgb-1)*obj.backgroundIntensity+obj.backgroundIntensity;
+        function [lB, dB] = parseChromaticClass(obj, colorClass)
+            b1_rgb = obj.contrast*obj.backgroundIntensity+obj.backgroundIntensity;
+            b2_rgb = -obj.contrast*obj.backgroundIntensity+obj.backgroundIntensity;
             
             switch colorClass
                 case 'achromatic'
-                    barColor = [bar_rgb,bar_rgb,bar_rgb];
-                    backgroundColor = [background_rgb, background_rgb, background_rgb];
+                    lB = [b1_rgb,b1_rgb,b1_rgb];
+                    dB = [b2_rgb, b2_rgb, b2_rgb];
+                case 'red'
+                    lB = [b1_rgb, 0, 0];
+                    dB = [obj.backgroundIntensity, ...
+                        obj.backgroundIntensity, ...
+                        obj.backgroundIntensity];
+                case 'green'
+                    lB = [0, b1_rgb, 0];
+                    dB = [obj.backgroundIntensity, ...
+                        obj.backgroundIntensity, ...
+                        obj.backgroundIntensity];
+                case 'blue'
+                    lB = [0, 0, b1_rgb];
+                    dB = [obj.backgroundIntensity, ...
+                        obj.backgroundIntensity, ...
+                        obj.backgroundIntensity];
+                case 'yellow'
+                    lB = [b1_rgb, b1_rgb, 0];
+                    dB = [obj.backgroundIntensity, ...
+                        obj.backgroundIntensity, ...
+                        obj.backgroundIntensity];
                 case 'blue-yellow'
-                    barColor = [0,0,bar_rgb];
-                    backgroundColor = [background_rgb, background_rgb, 0];
+                    if obj.contrast >= 0
+                        lB = [b2_rgb, b2_rgb, b1_rgb];
+                        dB = [b1_rgb, b1_rgb, b2_rgb];
+                    else
+                        lB = [b1_rgb, b1_rgb, b2_rgb];
+                        dB = [b2_rgb, b2_rgb, b1_rgb];
+                    end
                 case 'red-green'
-                    barColor = [bar_rgb,0,0];
-                    backgroundColor = [0,background_rgb,0]; 
+                    if obj.contrast >= 0
+                        lB = [b1_rgb, b2_rgb, b2_rgb];
+                        dB = [b2_rgb, b1_rgb, b2_rgb];
+                    else
+                        lB = [b2_rgb, b1_rgb, b1_rgb];
+                        dB = [b1_rgb, b2_rgb, b1_rgb];
+                    end
+
                 case 'S-Iso'
-                    barColor = [0.08,0.09,1];
-                    backgroundColor = [0.24, 0.27, 0];
+                    sIsoWeights = obj.getSIsoWeights();
+                    lB = sIsoWeights .* obj.backgroundIntensity+obj.backgroundIntensity;
+                    dB = -sIsoWeights .* obj.backgroundIntensity+obj.backgroundIntensity;
                 otherwise
-                    barColor = [bar_rgb,bar_rgb,bar_rgb];
-                    backgroundColor = [background_rgb, background_rgb, background_rgb];
+                    lB = [b1_rgb,b1_rgb,b1_rgb];
+                    dB = [b2_rgb, b2_rgb, b2_rgb];
             end
         end
         
-        function organizeParameters(obj)
-            % Calculate the number of repetitions of each annulus type.
-            numReps = ceil(double(obj.numberOfAverages) / length(obj.orientations));
+        function sIsoWeights = getSIsoWeights(obj)
+            device = obj.rig.getDevice('Stage');
+            qCatch = edu.washington.riekelab.rezeanu.utils.getLcrQuantalCatch(device, obj.persistor);
+            colorWeights = qCatch(:, 1:3)' \ [0,0,1]';
+            sIsoWeights = colorWeights./max(abs(colorWeights));
+        end
+        
+        function getStimulusOrder(obj)
+            [ori_grid, spd_grid] = meshgrid(obj.orientations, obj.speedsPix);
+            all_ori = ori_grid(:)';
+            all_spd = spd_grid(:)';
+            
+            barcodeSequence = [all_ori; all_spd];
             
             % Set the sequence.
             if obj.randomOrder
-                obj.sequence = zeros(length(obj.orientations), numReps);
-                for k = 1 : numReps
-                    obj.sequence(:,k) = obj.orientations(randperm(length(obj.orientations)));
+                obj.speedSequence = zeros(obj.numberOfReps, length(barcodeSequence));
+                obj.orientationSequence = zeros(obj.numberOfReps, length(barcodeSequence));
+                for k = 1 : obj.numberOfReps
+                    barcodeOrder = randperm(length(barcodeSequence));
+                    obj.speedSequence(k, :) = barcodeSequence(2,barcodeOrder);
+                    obj.orientationSequence(k, :) = barcodeSequence(1,barcodeOrder);
                 end
+                obj.speedSequence = obj.speedSequence';
+                obj.orientationSequence = obj.orientationSequence';
             else
-                obj.sequence = obj.orientations(:) * ones(1, numReps);
+                obj.orientationSequence = repmat(obj.barcodeSequence(1,:), [obj.numberOfReps,1])';
+                obj.speedSequence = repmat(obj.barcodeSequence(2,:), [obj.numberOfReps,1])';
             end
-            obj.sequence = obj.sequence(:)';
-            obj.sequence = obj.sequence(1 : obj.numberOfAverages);
+            
+            obj.orientationSequence = obj.orientationSequence(:)';
+            obj.speedSequence = obj.speedSequence(:)';
+        end
+        
+        function generateBarcode(obj)
+            obj.imageMatrix = zeros(1, sum(obj.barWidthsPix), 3);
+            for i = 1:length(obj.barWidthsPix)
+                % Set start and stop index
+                if i == 1
+                    start = 1;
+                    stop = obj.barWidthsPix(i);
+                else
+                    start = stop;
+                    stop = start + obj.barWidthsPix(i);
+                end
+
+                % Assign alternating bar colors
+                if mod(i,2) == 0
+                    obj.imageMatrix(1,start:stop, 1) = obj.darkBar(1);
+                    obj.imageMatrix(1,start:stop, 2) = obj.darkBar(2);
+                    obj.imageMatrix(1,start:stop, 3) = obj.darkBar(3);
+                else
+                    obj.imageMatrix(1,start:stop,1) = obj.lightBar(1);
+                    obj.imageMatrix(1,start:stop,2) = obj.lightBar(2);
+                    obj.imageMatrix(1,start:stop,3) = obj.lightBar(3);
+                end
+            end    
+            diagnoalScreenDistance = ceil(sqrt(obj.canvasSize(1)^2+obj.canvasSize(2)^2));
+            obj.imageMatrix = uint8(repmat(obj.imageMatrix, [diagnoalScreenDistance, 1, 1])*255);
         end
         
         function p = createPresentation(obj)
 
-            p = stage.core.Presentation((obj.preTime + obj.stimTime + obj.tailTime) * 1e-3);
-            p.setBackgroundColor(obj.backgroundRGB);
+            p = stage.core.Presentation((obj.preTime + obj.stimTime + obj.tailTime)*(60/59) * 1e-3);
+            p.setBackgroundColor(obj.backgroundIntensity);
             
-            
-            % Set the bar color.
-            colorTmp = obj.contrast*obj.barRGB*obj.backgroundIntensity+obj.backgroundIntensity;
-            colorTmp(obj.barRGB == 0) = 0;
-            
-            rect = stage.builtin.stimuli.Rectangle();
-            rect.size = obj.barSizePix;
-            rect.position = obj.canvasSize/2;
-            rect.orientation = obj.orientation;
-            rect.color = colorTmp;
+            barcode = stage.builtin.stimuli.Image(obj.imageMatrix);
+            barcode.size = [size(obj.imageMatrix,2),size(obj.imageMatrix,1)];
+            barcode.position = obj.barcodeSize/2;
+            barcode.orientation = obj.orientation;
             
             % Add the stimulus to the presentation.
-            p.addStimulus(rect);
+            p.addStimulus(barcode);
             
-            barVisible = stage.builtin.controllers.PropertyController(rect, 'visible', ...
-                @(state)state.time >= obj.preTime * 1e-3 && state.time < (obj.preTime + obj.stimTime) * 1e-3);
-            p.addController(barVisible);
+            barcodeVisible = stage.builtin.controllers.PropertyController(barcode, 'visible', ...
+                @(state)state.frame >= obj.preFrames && state.frame < (obj.preFrames + obj.stimFrames));
+            p.addController(barcodeVisible);
             
             % Bar position controller
-            barPosition = stage.builtin.controllers.PropertyController(rect, 'position', ...
-                @(state)motionTable(obj, state.time - obj.preTime*1e-3));
-            p.addController(barPosition);
-            
-            function p = motionTable(obj, time)
+            barcodePosition = stage.builtin.controllers.PropertyController(barcode, 'position', ...
+                @(state)motionTable(obj, state.frame - obj.preFrames));
+            p.addController(barcodePosition);
+
+            function p = motionTable(obj, frame)
                 % Calculate the increment with time.  
-                inc = time * obj.speedPix - obj.outerMaskRadiusPix - obj.barSizePix(1)/2 ;
+                inc = frame * obj.speedPixPerFrame - obj.outerMaskRadiusPix - obj.barcodeSize(2)/2;
                 
                 p = [cos(obj.orientationRads) sin(obj.orientationRads)] .* (inc*ones(1,2)) + obj.canvasSize/2;
             end
@@ -174,6 +275,7 @@ classdef Barcode < manookinlab.protocols.ManookinLabStageProtocol
             if (obj.innerMaskRadiusPix > 0)
                 p.addStimulus(obj.makeInnerMask());
             end
+
             
             % Create the outer mask.
             if (obj.outerMaskRadius > 0)
@@ -183,7 +285,9 @@ classdef Barcode < manookinlab.protocols.ManookinLabStageProtocol
         
         function mask = makeOuterMask(obj)
             mask = stage.builtin.stimuli.Rectangle();
-            mask.color = obj.backgroundRGB;
+            mask.color = [obj.backgroundIntensity,...
+                obj.backgroundIntensity,...
+                obj.backgroundIntensity];
             mask.position = obj.canvasSize/2;
             mask.orientation = 0;
             mask.size = 2 * max(obj.canvasSize) * ones(1,2);
@@ -196,7 +300,9 @@ classdef Barcode < manookinlab.protocols.ManookinLabStageProtocol
             mask = stage.builtin.stimuli.Ellipse();
             mask.radiusX = obj.innerMaskRadiusPix;
             mask.radiusY = obj.innerMaskRadiusPix;
-            mask.color = obj.backgroundRGB;
+            mask.color = [obj.backgroundIntensity,...
+                obj.backgroundIntensity,...
+                obj.backgroundIntensity];
             mask.position = obj.canvasSize/2;
         end
         
@@ -215,16 +321,31 @@ classdef Barcode < manookinlab.protocols.ManookinLabStageProtocol
                     end
                 end
             end
-            
-            % Get the bar contrast.
-            obj.contrast = obj.contrasts(mod(floor(obj.numEpochsCompleted/length(obj.orientations)), length(obj.contrasts))+1);
-            
+             
             % Get the current bar orientation.
-            obj.orientation = obj.sequence(obj.numEpochsCompleted+1);
+            obj.orientation = obj.orientationSequence(obj.numEpochsCompleted+1);
             obj.orientationRads = obj.orientation / 180 * pi;
             
+            % Get current speed in pix per frame
+            obj.speedPixPerFrame = obj.speedSequence(obj.numEpochsCompleted+1)/60;
+            
+            
+            obj.stimFrames = ceil((obj.barcodeSize(2)+obj.outerMaskRadiusPix*2)/obj.speedPixPerFrame);
+            obj.stimTime = obj.stimFrames/60*1e3;
+            
             epoch.addParameter('orientation', obj.orientation);
-            epoch.addParameter('contrast',obj.contrast);
+            epoch.addParameter('speed', obj.speedPixPerFrame*60);
+            epoch.addParameter('preFrames', obj.preFrames);
+            epoch.addParameter('stimFrames', obj.stimFrames);
+            epoch.addParameter('tailFrames', obj.tailFrames);
+        end
+        
+        function numberOfBarcodes = get.numberOfBarcodes(obj)
+            numberOfBarcodes = length(obj.orientations)*length(obj.speeds);
+        end
+        
+        function numberOfAverages = get.numberOfAverages(obj)
+            numberOfAverages = obj.numberOfBarcodes*obj.numberOfReps;
         end
         
         function tf = shouldContinuePreparingEpochs(obj)
