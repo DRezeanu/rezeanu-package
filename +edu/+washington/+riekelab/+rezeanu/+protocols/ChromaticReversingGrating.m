@@ -18,7 +18,7 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
         chromaticClass = 'achromatic'   % Chromatic type
         onlineAnalysis = 'none'         % Type of online analysis
         randomOrder = true              % Run the sequence in random order?
-        numberOfRepetitions = utin16(4) % Number of times to repeat each grating
+        numberOfRepetitions = uint16(4) % Number of times to repeat each grating
     end
     
     properties (Hidden)
