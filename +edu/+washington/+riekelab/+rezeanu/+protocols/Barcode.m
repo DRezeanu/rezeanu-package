@@ -1,18 +1,18 @@
 classdef Barcode < manookinlab.protocols.ManookinLabStageProtocol
     properties
         amp                             % Output amplifier
-        preTime = 500                   % Bar leading duration (ms)
-        tailTime = 500                  % Bar trailing duration (ms)
-        orientations = 0:45:315         % Bar angle (deg)
-        speeds = [635, 1205, 1660, 3150]  % Bar speeds (um/sec)
-        contrast = 1
-        barWidths = [105, 105, 595, 595,...
-            175, 245, 525, 455,...
-            490, 420, 665, 105,...
-            665, 595, 35, 490,...
-            280, 35, 560, 420,...
-            490, 350, 210, 420,...
-            175, 280, 525]              % Bar widths in microns
+        preTime = 500                   % Barcode leading duration (ms)
+        tailTime = 500                  % Barcode trailing duration (ms)
+        orientations = [0, 45, 90]      % Barcode angle (deg)
+        speeds = [635, 1205, 1660, 3150]  % Barcode speeds (um/sec)
+        contrast = 1                    % Barcode contrast (-1 to 1 units)
+        barWidths = [525, 280, 175, 420,...
+            210, 350, 490, 420,...
+            560, 35, 280, 490,...
+            35, 595, 665, 105,...
+            665, 420, 490, 455,...
+            525, 245, 175, 595,...
+            595, 105, 105]              % Bar widths in microns
         chromaticClass = 'achromatic'
         backgroundIntensity = 0.5       % Background light intensity (0-1)
         innerMaskRadius = 0             % Inner mask radius in microns.
@@ -132,8 +132,8 @@ classdef Barcode < manookinlab.protocols.ManookinLabStageProtocol
             
             switch colorClass
                 case 'achromatic'
-                    lB = [b1_rgb,b1_rgb,b1_rgb];
-                    dB = [b2_rgb, b2_rgb, b2_rgb];
+                    lB = [b2_rgb,b2_rgb,b2_rgb];
+                    dB = [b1_rgb, b1_rgb, b1_rgb];
                 case 'red'
                     lB = [b1_rgb, 0, 0];
                     dB = [obj.backgroundIntensity, ...
@@ -176,8 +176,8 @@ classdef Barcode < manookinlab.protocols.ManookinLabStageProtocol
                     lB = sIsoWeights .* obj.backgroundIntensity+obj.backgroundIntensity;
                     dB = -sIsoWeights .* obj.backgroundIntensity+obj.backgroundIntensity;
                 otherwise
-                    lB = [b1_rgb,b1_rgb,b1_rgb];
-                    dB = [b2_rgb, b2_rgb, b2_rgb];
+                    lB = [b2_rgb,b2_rgb,b2_rgb];
+                    dB = [b1_rgb, b1_rgb, b1_rgb];
             end
         end
         
