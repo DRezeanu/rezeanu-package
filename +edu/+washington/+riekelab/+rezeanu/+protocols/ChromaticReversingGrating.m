@@ -31,10 +31,6 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
         spatialPhaseRad % The spatial phase in radians.
         spatialFrequencies
         spatialFreq % The current spatial frequency for the epoch
-    end
-    
-    % Analysis properties
-    properties (Hidden)
         xaxis
         F1Amp
         F2Amp
@@ -42,6 +38,11 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
         repsPerX
         coneContrasts 
         qCatch
+        preFrames
+        tailFrames
+        waitFrames
+        moveFrames
+        stimFrames
     end
     
     properties (Dependent) 
