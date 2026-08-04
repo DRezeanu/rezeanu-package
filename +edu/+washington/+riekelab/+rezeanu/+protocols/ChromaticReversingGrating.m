@@ -1,25 +1,26 @@
 classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProtocol
     properties
         amp                                         % Output amplifier
-        preTime = 250                               % Grating leading duration (ms)
-        moveTime = 4000                             % Grating duration (ms)
-        tailTime = 250                              % Grating trailing duration (ms)
-        waitTime = 1000                             % Grating wait duration (ms)
+        preTime = 250                               % Time before grating appears (ms)
+        moveTime = 4000                             % Reversing grating duration (ms)
+        tailTime = 250                              % Time after grating disappears (ms)
+        waitTime = 1000                             % Stationary time before reversing begins (ms)
         contrast = 1.0                              % Grating contrast (0-1)
         orientation = 0.0                           % Grating orientation (deg)
-        spatialFreqs = 10.^(-0.301:0.301/3:1.4047)  % Spatial frequency (cyc/short axis of screen)
-        temporalFrequency = 2.0                     % Temporal frequency (Hz)
+        barWidths = [15, 30, 45, 60, 75]            % Grating bar widths (um)
+        temporalFrequency = 2.0                     % Temporal frequency of modulation (Hz)
         spatialPhase = 0.0                          % Spatial phase of grating (deg)
-        backgroundIntensity = 0.5                   % Background light intensity (0-1)
+        backgroundIntensity = 0.5                   % Background intensity (0-1)
         centerOffset = [0,0]                        % Center offset in pixels (x,y)
         apertureRadius = 0                          % Aperture radius in pixels.
         apertureClass = 'spot'                      % Spot or annulus?       
-        spatialClass = 'squarewave'                 % Spatial type (sinewave or squarewave)
-        chromaticClass = 'achromatic'               % Chromatic type
-        onlineAnalysis = 'none'                     % Type of online analysis
+        spatialClass = 'squarewave'                 % Grating type (sinewave or squarewave)
+        chromaticClass = 'achromatic'               % Chromatic class
+        onlineAnalysis = 'none'                     % Type of online analysis (currently unused)
         randomOrder = true                          % Run the sequence in random order?
-        numberOfRepetitions = uint16(4)             % Number of times to repeat each grating
-        trueFrameRate = 60;
+        numReps = uint16(4)                         % Number of times to repeat each grating
+        trueFrameRate = 60;                         % Actual measured device frame rate
+        verbose = false;                            % Print debug statements to console?
     end
     
     properties (Hidden)
@@ -31,7 +32,7 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
         rawImage
         spatialPhaseRad % The spatial phase in radians.
         spatialFrequencies
-        spatialFreq % The current spatial frequency for the epoch
+        frequency % The current spatial frequency for the epoch
         coneContrasts 
         qCatch
         preFrames
@@ -39,6 +40,7 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
         waitFrames
         moveFrames
         stimFrames
+        barWidthsPix
     end
     
     properties (Dependent) 
@@ -57,6 +59,9 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
         
         function prepareRun(obj)
             prepareRun@manookinlab.protocols.ManookinLabStageProtocol(obj);
+            if obj.verbose
+                fprintf('\nPreparing run\n');
+            end
 
             if ~obj.isMeaRig
                 obj.showFigure('symphonyui.builtin.figures.ResponseFigure', obj.rig.getDevice(obj.amp));
@@ -67,6 +72,8 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
             obj.waitFrames = round(obj.waitTime*obj.trueFrameRate*1e-3);
             obj.moveFrames = round(obj.moveTime*obj.trueFrameRate*1e-3);
             obj.stimFrames = round(obj.stimTime*obj.trueFrameRate*1e-3);
+            
+            obj.barWidthsPix = obj.rig.getDevice('Stage').um2pix(obj.barWidths);
             
             % Calculate the spatial phase in radians.
             obj.spatialPhaseRad = obj.spatialPhase / 180 * pi;
@@ -83,12 +90,14 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
 
             % Organize stimulus and analysis parameters.
             obj.organizeParameters();
-
+            if obj.verbose 
+                fprintf('\nPrepared run\n');
+            end
         end
         
 
         function parseChromaticClass(obj, className)
-
+            
             switch className
                 case 'achromatic'
                     obj.colorWeights = [1,1,1];
@@ -117,7 +126,9 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
         end
 
         function p = createPresentation(obj)
-            
+            if obj.verbose
+                fprintf('\nCreating presentation\n');
+            end
             p = stage.core.Presentation((obj.preTime + obj.stimTime + obj.tailTime) * (obj.trueFrameRate/obj.frameRate) * 1e-3); % Create presentation of specified duration
             p.setBackgroundColor(obj.backgroundIntensity); % Set background intensity
             
@@ -189,6 +200,9 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
                     p.addStimulus(mask);
                 end
             end
+            if obj.verbose
+                fprintf('\nCreated presentation\n');
+            end
         end
         
         function setRawImage(obj)
@@ -199,43 +213,21 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
             offsetAlongAxis = obj.centerOffset(1)*cos(rotRads) + obj.centerOffset(2)*sin(rotRads);
             x = linspace(-sz/2 + 0.5, sz/2 - 0.5, sz) - offsetAlongAxis;
 
-            obj.rawImage = x / min(obj.canvasSize) * 2 * pi * obj.spatialFreq;
+            obj.rawImage = x / min(obj.canvasSize) * 2 * pi * obj.frequency;
             
             if ~strcmp(obj.chromaticClass, 'achromatic')
                 obj.rawImage = repmat(obj.rawImage, [1 1 3]);
             end
 
-
-            % sz = ceil(sqrt(obj.canvasSize(1)^2 + obj.canvasSize(2)^2));
-            % [x,y] = meshgrid(...
-            %     linspace(-sz/2, sz/2, sz), ...
-            %     linspace(-sz/2, sz/2, sz));
-            % 
-            % % Calculate the orientation in radians.
-            % rotRads = obj.orientation / 180 * pi;
-            % 
-            % % Center the stimulus.
-            % x = x + obj.centerOffset(1)*cos(rotRads);
-            % y = y + obj.centerOffset(2)*sin(rotRads);
-            % 
-            % x = x / min(obj.canvasSize) * 2 * pi;
-            % y = y / min(obj.canvasSize) * 2 * pi;
-            % 
-            % % Calculate the raw grating image.
-            % img = (cos(0)*x + sin(0) * y) * obj.spatialFreq;
-            % obj.rawImage = img(1,:);
-            % 
-            % if ~strcmp(obj.chromaticClass, 'achromatic')
-            %     obj.rawImage = repmat(obj.rawImage, [1 1 3]);
-            % end
         end
         
         % This is a method of organizing stimulus parameters.
         function organizeParameters(obj)
             
+            SFs = min(obj.canvasSize) ./ (2*obj.barWidthsPix);
             
             % Get the array of radii.
-            freqs = obj.spatialFreqs(:) * ones(1, obj.numberOfRepetitions);
+            freqs = SFs(:) * ones(1, obj.numReps);
             freqs = freqs(:)';
             
             % Deal with the parameter order if it is random order.
@@ -255,7 +247,9 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
         
         function prepareEpoch(obj, epoch)
             prepareEpoch@manookinlab.protocols.ManookinLabStageProtocol(obj, epoch);
-
+            if obj.verbose
+                fprintf('\nPreparing Epoch %d\n', obj.numEpochsPrepared);
+            end
             % Remove the Amp responses if it's an MEA rig.
             if obj.isMeaRig
                 amps = obj.rig.getDevices('Amp');
@@ -270,13 +264,13 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
             end
 
             % Set the current spatial frequency.
-            obj.spatialFreq = obj.spatialFrequencies( obj.numEpochsCompleted+1 );
+            obj.frequency = obj.spatialFrequencies( obj.numEpochsCompleted+1 );
             
             % Set up the raw image.
             obj.setRawImage();
 
             % Add the spatial frequency to the epoch.
-            epoch.addParameter('spatialFreq', obj.spatialFreq);
+            epoch.addParameter('frequency', obj.frequency);
             
             % Save out the cone/rod contrasts.
             epoch.addParameter('lContrast', obj.coneContrasts(1));
@@ -290,6 +284,9 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
             epoch.addParameter('stimFrames', obj.stimFrames);
             epoch.addParameter('qCatch', obj.qCatch);
             epoch.addParameter('colorWeights', obj.colorWeights);
+            if obj.verbose
+                fprintf('\nPrepared Epoch %d\n', obj.numEpochsPrepared);
+            end
         end
 
         function temporalFrequencyFrames = get.temporalFrequencyFrames(obj)
@@ -297,7 +294,7 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
         end
 
         function numberOfAverages = get.numberOfAverages(obj)
-            numberOfAverages = length(obj.spatialFreqs)*obj.numberOfRepetitions;
+            numberOfAverages = length(obj.barWidths)*obj.numReps;
         end
         
         function stimTime = get.stimTime(obj)

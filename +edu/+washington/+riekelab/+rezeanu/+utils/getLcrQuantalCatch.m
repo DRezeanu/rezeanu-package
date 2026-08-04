@@ -1,6 +1,16 @@
 function qCatch = getLcrQuantalCatch(device, persistor)
     % Grab epoch group 
-    epoch_group = persistor.currentEpochGroup;
+    try
+        epoch_group = persistor.currentEpochGroup;
+    catch ME
+        qCatch = [
+               0.664987   0.169773   0.040604   0.154258
+               0.638458   1.136154   0.227892   3.911955
+               0.114495   0.115746   1.121788   0.715405]*1e6;
+        fprintf('\nUnable to instantiate epoch group, error: %s\n', ME.identifier);
+        fprintf('\nReturning placeholder quantal catch values\n');
+        return
+    end
     
     if isempty(epoch_group)
         error('Must have an active epoch group to get quantal catch values')
