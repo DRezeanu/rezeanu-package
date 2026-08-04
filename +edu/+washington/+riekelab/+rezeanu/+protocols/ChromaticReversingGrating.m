@@ -38,7 +38,6 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
         waitFrames
         moveFrames
         stimFrames
-        colorWeights
         trueFrameRate
     end
     
