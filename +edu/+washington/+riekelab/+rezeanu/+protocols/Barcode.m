@@ -37,7 +37,7 @@ classdef Barcode < manookinlab.protocols.ManookinLabStageProtocol
         speedsType = symphonyui.core.PropertyType('denserealdouble','matrix')
         chromaticClassType = symphonyui.core.PropertyType('char', 'row',...
             {'achromatic', 'red', 'green', 'blue', 'yellow', ...
-            'blue-yellow', 'red-green', 'S-Iso'})
+            'blue-yellow', 'red-green', 'S-Iso', 'M-Iso', 'L-Iso'})
         orientationSequence
         speedSequence
         orientation
@@ -175,6 +175,14 @@ classdef Barcode < manookinlab.protocols.ManookinLabStageProtocol
                     sIsoWeights = obj.getSIsoWeights();
                     lB = sIsoWeights .* obj.backgroundIntensity+obj.backgroundIntensity;
                     dB = -sIsoWeights .* obj.backgroundIntensity+obj.backgroundIntensity;
+                case 'M-Iso'
+                    mIsoWeights = obj.getMIsoWeights();
+                    lB = mIsoWeights .* obj.backgroundIntensity+obj.backgroundIntensity;
+                    dB = -mIsoWeights .* obj.backgroundIntensity+obj.backgroundIntensity;
+                case 'L-Iso'
+                    lIsoWeights = obj.getLIsoWeights();
+                    lB = lIsoWeights .* obj.backgroundIntensity+obj.backgroundIntensity;
+                    dB = -lIsoWeights .* obj.backgroundIntensity+obj.backgroundIntensity;
                 otherwise
                     lB = [b2_rgb,b2_rgb,b2_rgb];
                     dB = [b1_rgb, b1_rgb, b1_rgb];
@@ -187,7 +195,21 @@ classdef Barcode < manookinlab.protocols.ManookinLabStageProtocol
             colorWeights = qCatch(:, 1:3)' \ [0,0,1]';
             sIsoWeights = colorWeights./max(abs(colorWeights));
         end
+
+        function mIsoWeights = getMIsoWeights(obj)
+            device = obj.rig.getDevice('Stage');
+            qCatch = edu.washington.riekelab.rezeanu.utils.getLcrQuantalCatch(device, obj.persistor);
+            colorWeights = qCatch(:, 1:3)' \ [0,1,0]';
+            mIsoWeights = colorWeights./max(abs(colorWeights));
+        end
         
+        function lIsoWeights = getLIsoWeights(obj)
+            device = obj.rig.getDevice('Stage');
+            qCatch = edu.washington.riekelab.rezeanu.utils.getLcrQuantalCatch(device, obj.persistor);
+            colorWeights = qCatch(:, 1:3)' \ [1,0,0]';
+            lIsoWeights = colorWeights./max(abs(colorWeights));
+        end
+
         function getStimulusOrder(obj)
             [ori_grid, spd_grid] = meshgrid(obj.orientations, obj.speedsPix);
             all_ori = ori_grid(:)';
