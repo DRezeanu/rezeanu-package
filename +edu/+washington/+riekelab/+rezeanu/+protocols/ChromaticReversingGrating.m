@@ -19,6 +19,7 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
         onlineAnalysis = 'none'                     % Type of online analysis
         randomOrder = true                          % Run the sequence in random order?
         numberOfRepetitions = uint16(4)             % Number of times to repeat each grating
+        trueFrameRate = 60;
     end
     
     properties (Hidden)
@@ -38,7 +39,6 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
         waitFrames
         moveFrames
         stimFrames
-        trueFrameRate
     end
     
     properties (Dependent) 
@@ -62,7 +62,6 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
                 obj.showFigure('symphonyui.builtin.figures.ResponseFigure', obj.rig.getDevice(obj.amp));
             end
             
-            obj.trueFrameRate = 60;
             obj.preFrames = round(obj.preTime*obj.trueFrameRate*1e-3);
             obj.tailFrames = round(obj.tailTime*obj.trueFrameRate*1e-3);
             obj.waitFrames = round(obj.waitTime*obj.trueFrameRate*1e-3);
