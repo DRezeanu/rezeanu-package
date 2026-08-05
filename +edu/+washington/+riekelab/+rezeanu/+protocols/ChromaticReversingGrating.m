@@ -72,8 +72,19 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
             obj.waitFrames = round(obj.waitTime*obj.trueFrameRate*1e-3);
             obj.moveFrames = round(obj.moveTime*obj.trueFrameRate*1e-3);
             obj.stimFrames = round(obj.stimTime*obj.trueFrameRate*1e-3);
+
+            % Because the actual canvas size of the LCR is 912 x 1140 but we
+            % double it to 1824 x 1140, odd value pixel numbers for bar
+            % count don't work, even though we multiply by 2 later in the
+            % code. This ensures barWidthPix is always an even number.
+            rawPix = obj.rig.getDevice('Stage').um2pix(obj.barWidths);
+            obj.barWidthsPix = 2 * max(round(rawPix / 2), 1);
             
-            obj.barWidthsPix = obj.rig.getDevice('Stage').um2pix(obj.barWidths);
+            if obj.verbose
+                disp('Bar Withs in pixels:')
+                disp(obj.barWidthsPix)
+                disp(obj.stageClass)
+            end
             
             % Calculate the spatial phase in radians.
             obj.spatialPhaseRad = obj.spatialPhase / 180 * pi;
@@ -164,11 +175,12 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
                 else
                     phase = 0;
                 end
-                
-                g = cos(obj.spatialPhaseRad + phase + obj.rawImage);
-                
+                                
                 if strcmp(obj.spatialClass, 'squarewave')
-                    g = sign(g);
+                    phaseBars = (obj.spatialPhaseRad + phase) / pi;
+                    g = 1-2 * mod(obj.rawImage + round(phaseBars), 2);
+                else
+                    g = cos(obj.spatialPhaseRad + phase + obj.rawImage);
                 end
                 
                 g = obj.contrast * g;
@@ -212,11 +224,33 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
             
             offsetAlongAxis = obj.centerOffset(1)*cos(rotRads) + obj.centerOffset(2)*sin(rotRads);
             x = linspace(-sz/2 + 0.5, sz/2 - 0.5, sz) - offsetAlongAxis;
-
-            obj.rawImage = x / min(obj.canvasSize) * 2 * pi * obj.frequency;
+            
+            if strcmp(obj.spatialClass, 'squarewave')
+                w = min(obj.canvasSize)/(2*obj.frequency);
+                obj.rawImage = floor(x/w);
+            else
+                obj.rawImage = x/min(obj.canvasSize) * 2 * pi * obj.frequency;
+            end
             
             if ~strcmp(obj.chromaticClass, 'achromatic')
                 obj.rawImage = repmat(obj.rawImage, [1 1 3]);
+            end
+            
+            if obj.verbose
+                w = min(obj.canvasSize) / (2*obj.frequency);
+                if strcmp(obj.spatialClass, 'squarewave')
+                    g0 = 1 - 2*mod(obj.rawImage, 2);
+                    gP = 1 - 2*mod(obj.rawImage + 1, 2);
+                else
+                    g0 = sign(cos(obj.spatialPhaseRad + obj.rawImage));
+                    gP = sign(cos(obj.spatialPhaseRad + pi + obj.rawImage));
+                end
+                r0 = diff(find([true, diff(g0(:)') ~= 0, true]));
+                rP = diff(find([true, diff(gP(:)') ~= 0, true]));
+                fprintf('w=%.2f | phase0 widths=[%s] | phasePi widths=[%s]\n', ...
+                    w, num2str(unique(r0)), num2str(unique(rP)));
+                fprintf('  counts  phase0: +%d -%d | phasePi: +%d -%d\n', ...
+                    sum(g0(:)>0), sum(g0(:)<0), sum(gP(:)>0), sum(gP(:)<0));
             end
 
         end
@@ -269,8 +303,12 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
             % Set up the raw image.
             obj.setRawImage();
 
-            % Add the spatial frequency to the epoch.
+            currentBarWidth = min(obj.canvasSize) / (2*obj.frequency);
+            % Add the spatial frequency to the epoch and the actual bar
+            % width in Microns
             epoch.addParameter('frequency', obj.frequency);
+            epoch.addParameter('barWidthPix', currentBarWidth);
+            epoch.addParameter('barWidthUm', obj.rig.getDevice('Stage').pix2um(currentBarWidth));
             
             % Save out the cone/rod contrasts.
             epoch.addParameter('lContrast', obj.coneContrasts(1));
