@@ -354,17 +354,6 @@ classdef Barcode < manookinlab.protocols.ManookinLabStageProtocol
                     end
                 end
             end
-             
-            % Get the current bar orientation.
-            obj.orientation = obj.orientationSequence(obj.numEpochsCompleted+1);
-            obj.orientationRads = obj.orientation / 180 * pi;
-            
-            % Get current speed in pix per frame
-            obj.speedPixPerFrame = obj.speedSequence(obj.numEpochsCompleted+1)/60;
-            
-            
-            obj.stimFrames = ceil((obj.barcodeSize(2)+obj.outerMaskRadiusPix*2)/obj.speedPixPerFrame);
-            obj.stimTime = obj.stimFrames/60*1e3;
             
             epoch.addParameter('orientation', obj.orientation);
             epoch.addParameter('speed', obj.speedPixPerFrame*60);
