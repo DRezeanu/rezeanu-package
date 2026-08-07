@@ -68,11 +68,6 @@ classdef Barcode < manookinlab.protocols.ManookinLabStageProtocol
             
             obj.preFrames = round(obj.preTime*1e-3*60);
             obj.tailFrames = round(obj.tailTime*1e-3*60);
-            
-            % Epoch constructor can't CREATE stimTime de novo, it has to be
-            % created here, and then every epoch manipulates it.
-            obj.stimTime = 2000;
-            obj.stimFrames = round(obj.stimTime*1e-3*60);
 
             
             obj.barWidthsPix = obj.rig.getDevice('Stage').um2pix(obj.barWidths);
