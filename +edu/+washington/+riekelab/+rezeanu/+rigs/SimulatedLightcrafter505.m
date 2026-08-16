@@ -104,6 +104,11 @@ classdef SimulatedLightcrafter505 < symphonyui.core.descriptions.RigDescription
             daq.getStream('doport1').setBitPosition(microdisplay, 15);    
             obj.addDevice(microdisplay);
             
+            % Add mea device (this will fail, but it more accurately
+            % represents what figures will be shown on screen)
+            mea = manookinlab.devices.MEADevice(9001);
+            obj.addDevice(mea);
+            
             % Add the filter wheel.
 %             filterWheel = manookinlab.devices.FilterWheelDevice('comPort', 'COM13');
 %             obj.addDevice(filterWheel);
