@@ -22,61 +22,32 @@ function qCatch = getQuantalCatch(species, spectrum, attenuations, fluxFactors, 
     prOrientation = ip.Results.prOrientation;
     
     photoreceptors = species.getResource('photoreceptors');
-    
-    % Pull channel specific NDF attenuation values
-    r_attenuations = attenuations('red');
-    g_attenuations = attenuations('green');
-    b_attenuations = attenuations('blue');
-
-    r_factor = fluxFactors('red');
-    g_factor = fluxFactors('green');
-    b_factor = fluxFactors('blue');
-
-    r_spectrum = spectrum('red');
-    g_spectrum = spectrum('green');
-    b_spectrum = spectrum('blue');
 
     intensity=1.0;
     units = 'intensity';
     
-    PrsToRgb = zeros(3,length(photoreceptors.keys));
-    
-    % Swap rods with s cones so the PR names are listed as
-    % L, M, S, rod instead of L, M, rod, S;
     prNames = photoreceptors.keys;
-    temp = prNames{4};
-    prNames{4}=prNames{3};
-    prNames{3} = temp;
+
+    qCatch = containers.Map(prNames, cell(1,length(prNames)));
     
     for i = 1:length(prNames)
         pr = prNames{i};
         collectingArea = getCollectingArea(photoreceptors(pr).collectingArea, ...
             lightPath, prOrientation);
 
-        PrsToRgb(1,i) = edu.washington.riekelab.util.convisom(intensity, units, r_factor, r_spectrum, ...
-                photoreceptors(pr).spectrum, collectingArea, ndfs, r_attenuations);
-         
-    end
-    
-    for i = 1:length(prNames)
-        pr = prNames{i};
-        collectingArea = getCollectingArea(photoreceptors(pr).collectingArea, ...
-            lightPath, prOrientation);
+        temp = zeros(1,length(spectrum.keys));
+        for j = 1:length(spectrum.keys)
+            key = spectrum.keys{j};
+            flux = fluxFactors(key);
+            attenuation = attenuations(key);
+            spec = spectrum(key);
 
-        PrsToRgb(2,i) = edu.washington.riekelab.util.convisom(intensity, units, g_factor, g_spectrum, ...
-                photoreceptors(pr).spectrum, collectingArea, ndfs, g_attenuations);
-    end
-    
-    for i = 1:length(prNames)
-        pr = prNames{i};
-        collectingArea = getCollectingArea(photoreceptors(pr).collectingArea, ...
-            lightPath, prOrientation);
-
-        PrsToRgb(3,i) = edu.washington.riekelab.util.convisom(intensity, units, b_factor, b_spectrum, ...
-                photoreceptors(pr).spectrum, collectingArea, ndfs, b_attenuations);
+            temp(j) = edu.washington.riekelab.util.convisom(intensity, units, flux, spec,...
+                photoreceptors(pr).spectrum, collectingArea, ndfs, attenuation);
+        end
+        qCatch(pr) = containers.Map(spectrum.keys, num2cell(round(temp)));
     end
    
-    qCatch = round(PrsToRgb);
 end
 
 function a = getCollectingArea(map, lightPath, orientation)
