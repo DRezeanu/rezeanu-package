@@ -25,6 +25,7 @@ classdef ChromaticReversingGrating < manookinlab.protocols.ManookinLabStageProto
     
     properties (Hidden)
         ampType
+        barWidthsType = symphonyui.core.PropertyType('denserealdouble','matrix')
         apertureClassType = symphonyui.core.PropertyType('char', 'row', {'spot', 'annulus'})
         spatialClassType = symphonyui.core.PropertyType('char', 'row', {'sinewave', 'squarewave'})
         chromaticClassType = symphonyui.core.PropertyType('char', 'row', {'achromatic','red','green','blue','S-iso','M-iso','L-iso', 'LM-iso'})

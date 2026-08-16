@@ -54,6 +54,8 @@ classdef Barcode < manookinlab.protocols.ManookinLabStageProtocol
         tailFrames
         speedsPix
         speedPixPerFrame
+        speedPix
+        speedUm
         barcodeSize
     end
     
@@ -350,8 +352,12 @@ classdef Barcode < manookinlab.protocols.ManookinLabStageProtocol
                 end
             end
             
+            obj.speedPix = obj.speedSequence(obj.numEpochsCompleted+1);
+            obj.speedUm = obj.rig.getDevice('Stage').pix2um(obj.speedPix);
+            
             epoch.addParameter('orientation', obj.orientation);
-            epoch.addParameter('speed', obj.speedPixPerFrame*60);
+            epoch.addParameter('speed_pix', obj.speedPix);
+            epoch.addParameter('speed_um', obj.speedUm);
             epoch.addParameter('preFrames', obj.preFrames);
             epoch.addParameter('stimFrames', obj.stimFrames);
             epoch.addParameter('tailFrames', obj.tailFrames);
