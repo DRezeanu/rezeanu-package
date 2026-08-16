@@ -118,5 +118,10 @@ classdef SimulatedLcrVideoMode < symphonyui.core.Device
             micronsPerPixel = obj.getConfigurationSetting('micronsPerPixel');
             p = round(um / micronsPerPixel);
         end
+        
+        function u = pix2um(obj, pix)
+            micronsPerPixel = obj.getConfigurationSetting('micronsPerPixel');
+            u = pix * micronsPerPixel;
+        end
     end
 end
