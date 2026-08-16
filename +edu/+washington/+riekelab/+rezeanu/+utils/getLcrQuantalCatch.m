@@ -3,17 +3,17 @@ function qCatch = getLcrQuantalCatch(device, persistor)
     try
         epoch_group = persistor.currentEpochGroup;
     catch ME
-        qCatch = [
-               0.664987   0.169773   0.040604   0.154258
-               0.638458   1.136154   0.227892   3.911955
-               0.114495   0.115746   1.121788   0.715405]*1e6;
+        qCatch = device.getResource('quantalCatch');
         fprintf('\nUnable to instantiate epoch group, error: %s\n', ME.identifier);
-        fprintf('\nReturning placeholder quantal catch values\n');
+        fprintf('\nReturning placeholder quantal catch for primate with FW00 filter\n');
         return
     end
     
     if isempty(epoch_group)
-        error('Must have an active epoch group to get quantal catch values')
+        qCatch = device.getResource('quantalCatch');
+        fprintf('\nNo active epoch group detected');
+        fprintf('\nReturning placeholder quantal catch for primate with FW00 filter\n');
+        return
     end
     
     % Pull spectrum, ndf attenuations, fluxFactors, current active
